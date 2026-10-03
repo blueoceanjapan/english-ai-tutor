@@ -119,10 +119,12 @@ if st.session_state.next_ready:
       if st.session_state.history:
         history_summary = "これまでの生徒の解答履歴：\n"
         for h in st.session_state.history:
-          status = "正解" if h["is_correct"] else "不正解"
+          is_corr = h.get("is_correct", False)
+          status = "正解" if is_corr else "不正解"
+          g_point = h.get("grammar_point", "一般動名詞")
+          u_ans = h.get("user_answer", "")
           history_summary += (
-              f"- 項目: {h['grammar_point']}, 判定: {status} (生徒の回答:"
-              f" {h['user_answer']})\n"
+              f"- 項目: {g_point}, 判定: {status} (生徒の回答: {u_ans})\n"
           )
 
       gen_prompt = f"""
