@@ -89,14 +89,32 @@ if st.session_state.next_ready:
         with st.spinner("次の問題を作成中..."):
             # これまでのやり取りを基に、新しい動名詞の問題をAIに作成させる
             gen_prompt = """
-あなたは中学2年生向けの英語の先生です。動名詞（〜すること、動詞のing形）に関する基本〜標準レベルの一問一答の日本語から英語への英作文問題を**1問だけ**新しく作成してください。
-出力は問題文のみにしてください（余計な挨拶は不要）。
-例：「私はピアノを弾くことが好きです。」
+あなたは中学2年生向けの優れた英語教師AIです。
+動名詞（gerund）の学習用として、次の類題を1問作成してください。
+必ず以下のフォーマット（目印）に従って出力してください。
+
+[問題]
+次の日本語を英語に訳しなさい。「〇〇」 (...)
+
+[模範解答]
+〇〇〇〇〇〇.
 """
             res = model.generate_content(gen_prompt)
-            st.session_state.current_question = (
-                "次の日本語を英語に訳しなさい。\n" + res.text.strip()
-            )
-            st.session_state.feedback = ""
-            st.session_state.next_ready = False
-            st.rerun()
+        response_text = res.text.strip()
+
+        # AIの出力から「問題」と「模範解答」を切り分けてセッションに保存する
+        if "[模範解答]" in response_text:
+            parts = response_text.split("[模範解答]")
+            question_part = parts[0].replace("[問題]", "").strip()
+            answer_part = parts[1].strip()
+            
+            st.session_state.current_question = question_part
+            st.session_state.correct_answer = answer_part
+        else:
+            # 万が一フォーマットがズレた場合の保険
+            st.session_state.current_question = response_text
+            st.session_state.correct_answer = "I like playing tennis."
+
+        # 次の問題へ進んだので、前のフィードバックやボタン状態をリセット
+        st.session_state.feedback = ""
+        st.session_state.next_ready = False
