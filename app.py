@@ -142,8 +142,15 @@ if st.session_state.next_ready:
       }}
       """
 
-      res = model.generate_content(gen_prompt)
-      res_text = res.text.strip()
+      try:
+        res = model.generate_content(gen_prompt)
+        res_text = res.text.strip()
+      except Exception as e:
+        st.error(
+            "⚠️ APIの利用制限（または混雑）により、問題の自動生成に一時的に失敗しました。"
+            "1分ほど時間を置いてから、もう一度ボタンを押してください。"
+        )
+        st.stop()
 
       # マークダウンのコードブロックが含まれていた場合の保険処理
       if res_text.startswith("```json"):
