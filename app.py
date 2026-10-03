@@ -1,120 +1,205 @@
+import json
+import os
 import streamlit as st
 import google.generativeai as genai
 
-# ページの設定
+# ページ設定
 st.set_page_config(
-    page_title="中学英語 動名詞一問一答ドリル", page_icon="📝", layout="centered"
+    page_title="中2英語 AI個別学習支援ドリル (動名詞)", page_icon="📚", layout="centered"
 )
 
-st.title("📝 中学2年英語：動名詞 一問一答ドリル")
-st.write(
-    "動名詞（〜すること / enjoy, finish, stop, mind など）の基礎を固めるためのドリル型AIチューターです。答えを入力すると、AIが誤答の分析と類題を出してくれます！"
-)
+# APIキーの設定
+if "GEMINI_API_KEY" in st.secrets:
+  genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+elif os.environ.get("GEMINI_API_KEY"):
+  genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
-# サイドバー：APIキー入力
-st.sidebar.header("設定")
-api_key = st.sidebar.text_input("Gemini API Key を入力", type="password")
+# モデルの初期化 (Gemini 3.8 Flash)
+@st.cache_resource
+def get_model():
+  return genai.GenerativeModel("gemini-3.8-flash")
 
-if not api_key:
-    st.warning("👈 左側のサイドバーに Gemini API Key を入力してください。")
-    st.stop()
 
-# APIの設定
-genai.configure(api_key=api_key)
-# 安定性の高い Gemini 2.5 Flash または 1.5 Flash を使用
-model = genai.GenerativeModel("gemini-3.8-flash")
+model = get_model()
 
 # セッション状態の初期化
 if "current_question" not in st.session_state:
-    st.session_state.current_question = (
-        "次の日本語を英語に訳しなさい。\n「私はテニスをすることが好きです。」 (playを使わず、likeを使用)"
+  st.session_state.current_question = (
+      "次の日本語を英語に訳しなさい。「私はテニスをすることが好きです。」"
+      "（playを使わず、likeを使用）"
+  )
+if "correct_answer" not in st.session_state:
+  st.session_state.correct_answer = "I like playing tennis."
+if "current_grammar_point" not in st.session_state:
+  st.session_state.current_grammar_point = "like + gerund"
+if "history" not in st.session_state:
+  st.session_state.history = []
+if "feedback" not in st.session_state:
+  st.session_state.feedback = ""
+if "next_ready" not in st.session_state:
+  st.session_state.next_ready = False
+
+st.title("📚 中2英語 AI個別学習支援ドリル")
+st.markdown("### 単元：動名詞 (Gerund) - 適応型AI学習システム")
+st.markdown("---")
+
+# 1. 問題の表示
+st.info(
+    f"**【問題】**\n\n{st.session_state.current_question}\n\n*（現在の焦点文法項目: `{st.session_state.current_grammar_point}`）*"
+)
+
+# 2. 解答入力フォーム
+with st.form("answer_form"):
+  user_answer = st.text_input(
+      "あなたの解答を入力してください（例: I like playing tennis.）"
+  )
+  submit_button = st.form_submit_button("回答する 🚀")
+
+# 3. 採点・分析の処理
+if submit_button and user_answer:
+  with st.spinner("AIが解答を分析中..."):
+    eval_prompt = f"""
+    あなたは中学2年生向けの優しく丁寧な英語学習AIチューターです。
+    以下の問題に対して、生徒が回答しました。この回答を採点し、つまずきを分析してください。
+
+    [問題]
+    {st.session_state.current_question}
+
+    [模範解答]
+    {st.session_state.correct_answer}
+
+    [生徒の回答]
+    {user_answer}
+
+    以下の形式で出力してください：
+    1. 正誤判定（「正解！」または「要修正・不正解」から始める）
+    2. なぜ間違えたのか、あるいはどこが素晴らしいかの丁寧な解説
+    """
+
+    eval_response = model.generate_content(eval_prompt)
+    feedback_text = eval_response.text
+
+    # 正誤判定の判定補助
+    is_correct = (
+        "正解！" in feedback_text
+        or user_answer.strip().lower()
+        == st.session_state.correct_answer.strip().lower()
     )
-    st.session_state.correct_answer = "I like playing tennis."
-    st.session_state.history = []
-    st.session_state.feedback = ""
-    st.session_state.next_ready = False
 
-# 問題表示エリア
-st.markdown("### 📌 現在の問題")
-st.info(st.session_state.current_question)
+    st.session_state.feedback = feedback_text
 
-# ユーザーの解答入力
-user_answer = st.text_input("あなたの解答を入力してください:", key="user_input")
+    # 履歴への保存（文法タグや正誤を詳細に蓄積）
+    st.session_state.history.append({
+        "question": st.session_state.current_question,
+        "user_answer": user_answer,
+        "correct_answer": st.session_state.correct_answer,
+        "grammar_point": st.session_state.current_grammar_point,
+        "is_correct": is_correct,
+        "feedback": feedback_text,
+    })
 
-col1, col2 = st.columns(2)
+    st.session_state.next_ready = True
+    st.rerun()
 
-with col1:
-    if st.button("回答する 🚀", type="primary"):
-        if not user_answer:
-            st.warning("解答を入力してください。")
-        else:
-            with st.spinner("AIが解答を分析中..."):
-                # プロンプトの構築（誤答分析と類題作成を指示）
-                prompt = f"""
-あなたは中学2年生向けの丁寧で優しい英語の個別指導AIチューターです。
-以下の問題に対する生徒の解答を分析し、フィードバックと類題を作成してください。
-
-【単元】中学2年 英語「動名詞」
-【問題】{st.session_state.current_question}
-【模範解答】{st.session_state.correct_answer}
-【生徒の解答】{user_answer}
-
-以下のフォーマットで出力してください（Markdown形式）：
-1. **判定**: 「正解！」または「惜しい！」、「不正解…」
-2. **解説**: なぜその形になるのかの分かりやすい解説。
-3. **つまずき分析**: もし間違えている場合、生徒がどこで勘違いしているか（例：不定詞と混同している、動詞の原形になっている等）の分析。
-4. **類題出題**: 定着のために、**まったく同じ文法ルールの新しい問題（一問一答）を1問だけ**新しく出してください。
-"""
-                response = model.generate_content(prompt)
-                st.session_state.feedback = response.text
-                st.session_state.history.append(
-                    {
-                        "q": st.session_state.current_question,
-                        "a": user_answer,
-                        "f": response.text,
-                    }
-                )
-                st.session_state.next_ready = True
-
-# フィードバックの表示
+# 4. フィードバックの表示
 if st.session_state.feedback:
-    st.markdown("---")
-    st.markdown("### 🔍 AIチューターからのフィードバック・分析")
-    st.write(st.session_state.feedback)
+  st.markdown("---")
+  st.markdown("### 🔍 AIチューターからのフィードバック・分析")
+  st.write(st.session_state.feedback)
 
-# 次の問題へ進むボタン
+# 5. 次の問題へ進むボタン（適応型学習：履歴を考慮して次の問題を生成）
 if st.session_state.next_ready:
-    st.markdown("---")
-    if st.button("次の類題に進む ➡️"):
-        with st.spinner("次の問題を作成中..."):
-            # これまでのやり取りを基に、新しい動名詞の問題をAIに作成させる
-            gen_prompt = """
-あなたは中学2年生向けの優れた英語教師AIです。
-動名詞（gerund）の学習用として、次の類題を1問作成してください。
-必ず以下のフォーマット（目印）に従って出力してください。
+  st.markdown("---")
+  if st.button("次の類題に進む（AIが難易度・項目を自動調整） ➡️"):
+    with st.spinner(
+        "生徒の解答履歴を分析し、最適な次の問題を作成中..."
+    ):
+      # 過去の履歴を要約してプロンプトに反映（適応型学習の核心）
+      history_summary = ""
+      if st.session_state.history:
+        history_summary = "これまでの生徒の解答履歴：\n"
+        for h in st.session_state.history:
+          status = "正解" if h["is_correct"] else "不正解"
+          history_summary += (
+              f"- 項目: {h['grammar_point']}, 判定: {status} (生徒の回答:"
+              f" {h['user_answer']})\n"
+          )
 
-[問題]
-次の日本語を英語に訳しなさい。「〇〇」 (...)
+      gen_prompt = f"""
+      あなたは中2英語の優秀な教材開発AIです。動名詞(gerund)の学習ドリルを作成しています。
+      {history_summary}
 
-[模範解答]
-〇〇〇〇〇〇.
-"""
-            res = model.generate_content(gen_prompt)
-        response_text = res.text.strip()
+      上記を踏まえ、生徒のつまずき傾向（間違えた文法パターンなど）を考慮し、次に解くべき類題を1問作成してください。
+      必ず以下の【JSON形式】のみで出力してください（マークダウンの ```json やバッククォートは一切使わず、純粋なJSON文字列のみを出力してください）。
 
-        # AIの出力から「問題」と「模範解答」を切り分けてセッションに保存する
-        if "[模範解答]" in response_text:
-            parts = response_text.split("[模範解答]")
-            question_part = parts[0].replace("[問題]", "").strip()
-            answer_part = parts[1].strip()
-            
-            st.session_state.current_question = question_part
-            st.session_state.correct_answer = answer_part
-        else:
-            # 万が一フォーマットがズレた場合の保険
-            st.session_state.current_question = response_text
-            st.session_state.correct_answer = "I like playing tennis."
+      {{
+        "question": "次の日本語を英語に訳しなさい。「〇〇」 (...) の形式で記述",
+        "answer": "模範解答の英文",
+        "grammar_point": "例: like + gerund, enjoy + gerund, finish + gerund, stop + gerund, 動名詞と不定詞の区別 など",
+        "difficulty": "basic または intermediate"
+      }}
+      """
 
-        # 次の問題へ進んだので、前のフィードバックやボタン状態をリセット
-        st.session_state.feedback = ""
-        st.session_state.next_ready = False
+      res = model.generate_content(gen_prompt)
+      res_text = res.text.strip()
+
+      # マークダウンのコードブロックが含まれていた場合の保険処理
+      if res_text.startswith("```json"):
+        res_text = res_text[7:]
+      if res_text.startswith("```"):
+        res_text = res_text[3:]
+      if res_text.endswith("```"):
+        res_text = res_text[:-3]
+      res_text = res_text.strip()
+
+      try:
+        data = json.loads(res_text)
+        st.session_state.current_question = data.get(
+            "question",
+            "次の日本語を英語に訳しなさい。「私は映画を見ることを楽しんでいます。」",
+        )
+        st.session_state.correct_answer = data.get(
+            "answer", "I enjoy watching movies."
+        )
+        st.session_state.current_grammar_point = data.get(
+            "grammar_point", "enjoy + gerund"
+        )
+      except Exception:
+        # JSONパースエラー時のフォールバック
+        st.session_state.current_question = (
+            "次の日本語を英語に訳しなさい。「私は宿題を終えました。」"
+            "（finishを使用）"
+        )
+        st.session_state.correct_answer = "I finished doing my homework."
+        st.session_state.current_grammar_point = "finish + gerund"
+
+      # 状態をリセット
+      st.session_state.feedback = ""
+      st.session_state.next_ready = False
+      st.rerun()
+
+# 6. 学習ダッシュボード（ポートフォリオとしての価値を高める機能）
+if st.session_state.history:
+  st.markdown("---")
+  with st.expander("📊 あなたの学習ダッシュボード（履歴・弱点分析）"):
+    total_q = len(st.session_state.history)
+    correct_count = sum(1 for h in st.session_state.history if h["is_correct"])
+    accuracy = (correct_count / total_q) * 100 if total_q > 0 else 0
+
+    col1, col2 = st.columns(2)
+    with col1:
+      st.metric(label="総解答数", value=f"{total_q} 問")
+    with col2:
+      st.metric(label="正答率", value=f"{accuracy:.1f}%")
+
+    st.markdown("#### 📝 過去の解答履歴と文法タグ")
+    for i, h in enumerate(reversed(st.session_state.history), 1):
+      status_icon = "🟢 正解" if h["is_correct"] else "🔴 要復習"
+      st.markdown(
+          f"**第 {total_q - i + 1} 問** | 項目: `{h['grammar_point']}` -"
+          f" {status_icon}"
+      )
+      st.text(f"問題: {h['question']}")
+      st.text(f"あなたの回答: {h['user_answer']}")
+      st.text(f"模範解答: {h['correct_answer']}")
+      st.markdown("---")
