@@ -22,7 +22,7 @@ if not api_key:
 # APIの設定
 genai.configure(api_key=api_key)
 # 安定性の高い Gemini 2.5 Flash または 1.5 Flash を使用
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-3.8-flash")
 
 # セッション状態の初期化
 if "current_question" not in st.session_state:
