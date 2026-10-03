@@ -59,9 +59,9 @@ with st.form("answer_form"):
 if submit_button and user_answer:
   with st.spinner("AIが解答を分析中..."):
     eval_prompt = f"""
-    あなたは中学2年生向けの優しく丁寧な英語学習AIチューターです。
-    以下の問題に対して、生徒が回答しました。この回答を採点し、つまずきを分析してください。
-
+    あなたは中学生に寄り添う親しみやすく優秀な英語教師、峯島先生です。
+    以下の問題に対して、生徒が回答しました。峯島先生として優しく丁寧に採点し、つまずきを分析してください。
+    
     [問題]
     {st.session_state.current_question}
 
@@ -104,7 +104,7 @@ if submit_button and user_answer:
 # 4. フィードバックの表示
 if st.session_state.feedback:
   st.markdown("---")
-  st.markdown("### 🔍 AIチューターからのフィードバック・分析")
+  st.markdown("### 🔍 峯島先生からのフィードバック・分析")
   st.write(st.session_state.feedback)
 
 # 5. 次の問題へ進むボタン（適応型学習：履歴を考慮して次の問題を生成）
