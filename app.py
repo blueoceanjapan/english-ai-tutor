@@ -31,7 +31,7 @@ if "current_question" not in st.session_state:
 if "correct_answer" not in st.session_state:
   st.session_state.correct_answer = "I like playing tennis."
 if "current_grammar_point" not in st.session_state:
-  st.session_state.current_grammar_point = "like + gerund"
+  st.session_state.current_grammar_point = "like ＋ 動名詞"
 if "history" not in st.session_state:
   st.session_state.history = []
 if "feedback" not in st.session_state:
