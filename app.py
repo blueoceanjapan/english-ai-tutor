@@ -42,7 +42,7 @@ if "next_ready" not in st.session_state:
   st.session_state.next_ready = False
 
 st.title("📚 中2英語 峯島先生の個別学習支援ドリル")
-st.markdown("### 単元：動名詞 (Gerund) - 適応型AI学習システム")
+st.markdown("### 単元：動名詞 - 適応型AI学習システム")
 st.markdown("---")
 
 # 1. 問題の表示
