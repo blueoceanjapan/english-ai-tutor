@@ -1,53 +1,102 @@
-from google import genai
 import streamlit as st
+import google.generativeai as genai
 
-st.set_page_config(page_title="中学英語 AI個別指導チューター", layout="centered")
-
-st.title("🎓 中学英語 AI個別指導チューター")
-st.markdown(
-    "英語の文法や英作文について、AIの先生に質問してみよう！"
-    "（答えをそのまま教えず、考えるヒントをくれます）"
+# ページの設定
+st.set_page_config(
+    page_title="中学英語 動名詞一問一答ドリル", page_icon="📝", layout="centered"
 )
 
-# APIキーの入力欄
-api_key = st.text_input("Gemini API Key を入力してください", type="password")
+st.title("📝 中学2年英語：動名詞 一問一答ドリル")
+st.write(
+    "動名詞（〜すること / enjoy, finish, stop, mind など）の基礎を固めるためのドリル型AIチューターです。答えを入力すると、AIが誤答の分析と類題を出してくれます！"
+)
 
-if api_key:
-  client = genai.Client(api_key=api_key)
+# サイドバー：APIキー入力
+st.sidebar.header("設定")
+api_key = st.sidebar.text_input("Gemini API Key を入力", type="password")
 
-  # ユーザー入力欄
-  user_input = st.text_area(
-      "先生に質問したいことや、書いた英文を入力してね",
-      "例: He readed a book yesterday. って書いたんだけど、どこが変かな？",
-      height=100,
-  )
+if not api_key:
+    st.warning("👈 左側のサイドバーに Gemini API Key を入力してください。")
+    st.stop()
 
-  if st.button("先生に相談する"):
-    if user_input:
-      with st.spinner("AIチューターが考えています..."):
-        try:
-          system_instruction = (
-              "あなたは中学生向けの優しくフレンドリーな英語学習AIチューター（個別指導の先生）です。"
-              "生徒が入力した英文の誤りや質問に対して、以下の方針でサポートしてください。\n"
-              "1. まず褒めて励ます\n"
-              "2. 答えをそのまま教えず、気づきを促すためのヒントや問いかけを与える\n"
-              "3. 分かりやすい解説と例示を添える\n"
-              "4. 中学生が親しみを持てる、丁寧で温かいトーン（「〜だよ！」「〜してみよう！」など）を使う。"
-          )
+# APIの設定
+genai.configure(api_key=api_key)
+# 安定性の高い Gemini 2.5 Flash または 1.5 Flash を使用
+model = genai.GenerativeModel("gemini-2.5-flash")
 
-          prompt = f"{system_instruction}\n\n【生徒からの入力・質問】\n{user_input}"
+# セッション状態の初期化
+if "current_question" not in st.session_state:
+    st.session_state.current_question = (
+        "次の日本語を英語に訳しなさい。\n「私はテニスをすることが好きです。」 (playを使わず、likeを使用)"
+    )
+    st.session_state.correct_answer = "I like playing tennis."
+    st.session_state.history = []
+    st.session_state.feedback = ""
+    st.session_state.next_ready = False
 
-          response = client.models.generate_content(
-              model="gemini-3.8-flash",
-              contents=prompt,
-          )
+# 問題表示エリア
+st.markdown("### 📌 現在の問題")
+st.info(st.session_state.current_question)
 
-          st.subheader("💡 AIチューターからのアドバイス")
-          st.markdown(response.text)
+# ユーザーの解答入力
+user_answer = st.text_input("あなたの解答を入力してください:", key="user_input")
 
-        except Exception as e:
-          st.error(f"エラーが発生しました: {e}")
-    else:
-      st.warning("入力欄にメッセージを入力してください。")
-else:
-  st.info("👆 Google AI Studio で取得した API キーを入力してください。")
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button("回答する 🚀", type="primary"):
+        if not user_answer:
+            st.warning("解答を入力してください。")
+        else:
+            with st.spinner("AIが解答を分析中..."):
+                # プロンプトの構築（誤答分析と類題作成を指示）
+                prompt = f"""
+あなたは中学2年生向けの丁寧で優しい英語の個別指導AIチューターです。
+以下の問題に対する生徒の解答を分析し、フィードバックと類題を作成してください。
+
+【単元】中学2年 英語「動名詞」
+【問題】{st.session_state.current_question}
+【模範解答】{st.session_state.correct_answer}
+【生徒の解答】{user_answer}
+
+以下のフォーマットで出力してください（Markdown形式）：
+1. **判定**: 「正解！」または「惜しい！」、「不正解…」
+2. **解説**: なぜその形になるのかの分かりやすい解説。
+3. **つまずき分析**: もし間違えている場合、生徒がどこで勘違いしているか（例：不定詞と混同している、動詞の原形になっている等）の分析。
+4. **類題出題**: 定着のために、**まったく同じ文法ルールの新しい問題（一問一答）を1問だけ**新しく出してください。
+"""
+                response = model.generate_content(prompt)
+                st.session_state.feedback = response.text
+                st.session_state.history.append(
+                    {
+                        "q": st.session_state.current_question,
+                        "a": user_answer,
+                        "f": response.text,
+                    }
+                )
+                st.session_state.next_ready = True
+
+# フィードバックの表示
+if st.session_state.feedback:
+    st.markdown("---")
+    st.markdown("### 🔍 AIチューターからのフィードバック・分析")
+    st.write(st.session_state.feedback)
+
+# 次の問題へ進むボタン
+if st.session_state.next_ready:
+    st.markdown("---")
+    if st.button("次の類題に進む ➡️"):
+        with st.spinner("次の問題を作成中..."):
+            # これまでのやり取りを基に、新しい動名詞の問題をAIに作成させる
+            gen_prompt = """
+あなたは中学2年生向けの英語の先生です。動名詞（〜すること、動詞のing形）に関する基本〜標準レベルの一問一答の日本語から英語への英作文問題を**1問だけ**新しく作成してください。
+出力は問題文のみにしてください（余計な挨拶は不要）。
+例：「私はピアノを弾くことが好きです。」
+"""
+            res = model.generate_content(gen_prompt)
+            st.session_state.current_question = (
+                "次の日本語を英語に訳しなさい。\n" + res.text.strip()
+            )
+            st.session_state.feedback = ""
+            st.session_state.next_ready = False
+            st.rerun()
