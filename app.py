@@ -1,9 +1,15 @@
 import json
 import os
-import re
 
 import streamlit as st
 from google import genai
+
+
+# =========================================================
+# 基本設定
+# =========================================================
+
+MODEL_NAME = "gemini-3.8-flash"
 
 
 # =========================================================
@@ -25,78 +31,141 @@ api_key = None
 
 if "GEMINI_API_KEY" in st.secrets:
     api_key = st.secrets["GEMINI_API_KEY"]
+
 elif os.environ.get("GEMINI_API_KEY"):
     api_key = os.environ.get("GEMINI_API_KEY")
 
+
 if not api_key:
     st.error(
-        "Gemini APIキーが設定されていません。"
-        "Streamlit Secrets または環境変数 GEMINI_API_KEY を設定してください。"
+        "Gemini APIキーが設定されていません。\n\n"
+        "Streamlit Secrets に GEMINI_API_KEY を設定してください。"
     )
     st.stop()
 
-genai.configure(api_key=api_key)
-
 
 # =========================================================
-# Geminiモデル
+# Gemini Client
 # =========================================================
 
 @st.cache_resource
-def get_model():
-    return genai.GenerativeModel("gemini-1.5-flash")
+def get_client(api_key):
+    return genai.Client(api_key=api_key)
 
 
-model = get_model()
+client = get_client(api_key)
 
 
 # =========================================================
-# JSON処理用関数
+# JSON Schema
 # =========================================================
 
-def clean_json_response(text):
+EVALUATION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "is_correct": {
+            "type": "boolean"
+        },
+        "judgement": {
+            "type": "string",
+            "enum": [
+                "正解！",
+                "要修正・不正解"
+            ]
+        },
+        "feedback": {
+            "type": "string"
+        },
+        "mistake_type": {
+            "type": "string",
+            "enum": [
+                "correct",
+                "gerund_vs_infinitive",
+                "verb_form",
+                "word_order",
+                "missing_word",
+                "unnecessary_word",
+                "vocabulary",
+                "spelling",
+                "grammar_other",
+                "meaning",
+                "other"
+            ]
+        },
+        "weakness": {
+            "type": "string"
+        },
+        "grammar_point": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "is_correct",
+        "judgement",
+        "feedback",
+        "mistake_type",
+        "weakness",
+        "grammar_point"
+    ]
+}
+
+
+QUESTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "question": {
+            "type": "string"
+        },
+        "answer": {
+            "type": "string"
+        },
+        "grammar_point": {
+            "type": "string"
+        },
+        "difficulty": {
+            "type": "string",
+            "enum": [
+                "basic",
+                "intermediate"
+            ]
+        }
+    },
+    "required": [
+        "question",
+        "answer",
+        "grammar_point",
+        "difficulty"
+    ]
+}
+
+
+# =========================================================
+# Gemini JSON生成関数
+# =========================================================
+
+def generate_json(prompt, schema):
     """
-    Geminiの回答に ```json ... ``` が付いていた場合などを除去する。
+    Geminiから構造化JSONを取得する。
     """
 
-    text = text.strip()
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_json_schema": schema,
+        },
+    )
 
-    # ```json ... ``` を除去
-    if text.startswith("```json"):
-        text = text[7:]
+    # response.parsed が利用できる場合はそれを使用
+    if getattr(response, "parsed", None) is not None:
+        return response.parsed
 
-    # ``` ... ``` を除去
-    if text.startswith("```"):
-        text = text[3:]
+    # 念のため text からJSONを読む
+    if response.text:
+        return json.loads(response.text)
 
-    if text.endswith("```"):
-        text = text[:-3]
-
-    return text.strip()
-
-
-def extract_json(text):
-    """
-    AIの回答からJSON部分を抽出する。
-    """
-
-    text = clean_json_response(text)
-
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-
-    # JSONの前後に余計な文章がある場合に対応
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-
-    if match:
-        try:
-            return json.loads(match.group())
-        except json.JSONDecodeError:
-            pass
-
-    return None
+    raise ValueError("Geminiから有効なJSONレスポンスを取得できませんでした。")
 
 
 # =========================================================
@@ -104,26 +173,46 @@ def extract_json(text):
 # =========================================================
 
 if "current_question" not in st.session_state:
+
     st.session_state.current_question = (
-        '次の日本語を英語に訳しなさい。「私はテニスをすることが好きです。」'
+        '次の日本語を英語に訳しなさい。'
+        '「私はテニスをすることが好きです。」'
     )
 
+
 if "correct_answer" not in st.session_state:
-    st.session_state.correct_answer = "I like playing tennis."
+
+    st.session_state.correct_answer = (
+        "I like playing tennis."
+    )
+
 
 if "current_grammar_point" not in st.session_state:
-    st.session_state.current_grammar_point = "like ＋ 動名詞"
+
+    st.session_state.current_grammar_point = (
+        "like ＋ 動名詞"
+    )
+
 
 if "current_difficulty" not in st.session_state:
-    st.session_state.current_difficulty = "basic"
+
+    st.session_state.current_difficulty = (
+        "basic"
+    )
+
 
 if "history" not in st.session_state:
+
     st.session_state.history = []
 
+
 if "feedback" not in st.session_state:
+
     st.session_state.feedback = ""
 
+
 if "next_ready" not in st.session_state:
+
     st.session_state.next_ready = False
 
 
@@ -134,7 +223,7 @@ if "next_ready" not in st.session_state:
 st.title("📚 中2英語 個別学習支援ドリル")
 
 st.markdown(
-    "### 単元：動名詞 - 適応型AI学習システム"
+    "### 単元：動名詞 (Gerund) - 適応型AI学習システム"
 )
 
 st.caption(
@@ -151,7 +240,8 @@ st.markdown("---")
 st.markdown("### 📌 問題")
 
 st.info(
-    f"**【問題】**\n\n{st.session_state.current_question}"
+    f"**【問題】**\n\n"
+    f"{st.session_state.current_question}"
 )
 
 
@@ -167,23 +257,31 @@ with st.form("answer_form"):
 
     submit_button = st.form_submit_button(
         "回答する 🚀",
-        type="primary",
+        type="primary"
     )
 
 
 # =========================================================
-# 回答・AI採点・誤答分析
+# 回答処理
 # =========================================================
 
 if submit_button:
 
     if not user_answer.strip():
 
-        st.warning("解答を入力してください。")
+        st.warning(
+            "解答を入力してください。"
+        )
 
     else:
 
-        with st.spinner("解答を分析しています..."):
+        with st.spinner(
+            "解答を分析しています..."
+        ):
+
+            # -------------------------------------------------
+            # AI採点プロンプト
+            # -------------------------------------------------
 
             eval_prompt = f"""
 あなたは中学2年生向けの英語教師です。
@@ -208,166 +306,169 @@ if submit_button:
 【生徒の回答】
 {user_answer}
 
-以下の点を確認してください。
+以下の観点から評価してください。
 
-1. 生徒の英文が文法的に正しいか
-2. 日本語の意味を正しく表しているか
-3. 模範解答と異なっていても、別の正しい表現として認められる可能性があるか
-4. 間違っている場合、どのような種類の間違いなのか
-5. 今回の問題から判断できる生徒のつまずき
+1. 生徒の英文が文法的に正しいか。
+2. 日本語の意味を正しく表しているか。
+3. 模範解答と異なっていても、別の自然で正しい英文として認められる可能性があるか。
+4. 間違っている場合、具体的にどのような間違いなのか。
+5. 今回の回答から、生徒のどのようなつまずきが考えられるか。
 
-特に、単純な文字列一致だけで正誤を判断しないでください。
-
-以下のJSON形式のみで回答してください。
-Markdownのコードブロックや説明文は付けないでください。
-
-{{
-  "is_correct": true,
-  "judgement": "正解！",
-  "feedback": "生徒に分かりやすい丁寧な解説",
-  "mistake_type": "correct",
-  "weakness": "今回の回答から判断できる学習上の特徴",
-  "grammar_point": "{st.session_state.current_grammar_point}"
-}}
-
-mistake_type は以下から最も適切なものを1つ選んでください。
-
-- correct
-- gerund_vs_infinitive
-- verb_form
-- word_order
-- missing_word
-- unnecessary_word
-- vocabulary
-- spelling
-- grammar_other
-- meaning
-- other
-
-is_correct は true または false のどちらかにしてください。
+重要：
+- 模範解答との単純な文字列一致だけで正誤を判断しないこと。
+- 正しい別表現が可能な場合は、それを正解として扱うこと。
+- 中学2年生に対するフィードバックとして、分かりやすく説明すること。
+- 「正解」の場合も、なぜ正しいのかを簡潔に説明すること。
+- 「不正解」の場合は、生徒を責める表現を使わず、次にどう直せばよいかを説明すること。
+- weaknessには、今回の回答から判断できる学習上の特徴を書くこと。
+- 判断できない場合は、無理に推測せず「今回の回答だけでは明確に判断できません」とすること。
 """
+
+
+            # -------------------------------------------------
+            # AI採点
+            # -------------------------------------------------
 
             try:
 
-                eval_response = model.generate_content(eval_prompt)
+                eval_data = generate_json(
+                    eval_prompt,
+                    EVALUATION_SCHEMA
+                )
 
-                eval_data = extract_json(eval_response.text)
+            except Exception as e:
 
-            except Exception:
+                # ---------------------------------------------
+                # AI採点に失敗した場合のフォールバック
+                # ---------------------------------------------
 
-                eval_data = None
+                normalized_user = (
+                    user_answer
+                    .strip()
+                    .lower()
+                    .rstrip(".!?")
+                )
+
+                normalized_answer = (
+                    st.session_state.correct_answer
+                    .strip()
+                    .lower()
+                    .rstrip(".!?")
+                )
+
+                fallback_correct = (
+                    normalized_user
+                    == normalized_answer
+                )
+
+                eval_data = {
+                    "is_correct": fallback_correct,
+                    "judgement": (
+                        "正解！"
+                        if fallback_correct
+                        else "要修正・不正解"
+                    ),
+                    "feedback": (
+                        "AIによる詳細な分析を取得できなかったため、"
+                        "模範解答との基本的な照合結果を表示しています。"
+                    ),
+                    "mistake_type": (
+                        "correct"
+                        if fallback_correct
+                        else "other"
+                    ),
+                    "weakness": (
+                        "今回の回答だけでは判断できません。"
+                    ),
+                    "grammar_point": (
+                        st.session_state.current_grammar_point
+                    ),
+                }
+
+                # 開発中のみエラー内容を確認できるようにする
+                with st.expander(
+                    "⚠️ 開発用：AIエラー詳細"
+                ):
+
+                    st.write(
+                        str(e)
+                    )
 
 
-        # =================================================
-        # AI採点に失敗した場合
-        # =================================================
+            # -------------------------------------------------
+            # 結果取得
+            # -------------------------------------------------
 
-        if eval_data is None:
-
-            # 完全一致の場合だけ最低限の自動判定
-            normalized_user = (
-                user_answer.strip()
-                .lower()
-                .rstrip(".!?")
+            is_correct = bool(
+                eval_data.get(
+                    "is_correct",
+                    False
+                )
             )
 
-            normalized_answer = (
-                st.session_state.correct_answer.strip()
-                .lower()
-                .rstrip(".!?")
+            judgement = eval_data.get(
+                "judgement",
+                "要修正・不正解"
             )
 
-            fallback_correct = (
-                normalized_user == normalized_answer
+            feedback_text = eval_data.get(
+                "feedback",
+                "詳細なフィードバックを取得できませんでした。"
             )
 
-            eval_data = {
-                "is_correct": fallback_correct,
-                "judgement": (
-                    "正解！"
-                    if fallback_correct
-                    else "要修正・不正解"
-                ),
-                "feedback": (
-                    "AIによる詳細な分析を取得できなかったため、"
-                    "模範解答との基本的な照合結果を表示しています。"
-                ),
-                "mistake_type": (
-                    "correct"
-                    if fallback_correct
-                    else "other"
-                ),
-                "weakness": (
-                    "今回の回答だけでは判断できません。"
-                ),
-                "grammar_point": (
-                    st.session_state.current_grammar_point
-                ),
-            }
+            mistake_type = eval_data.get(
+                "mistake_type",
+                "other"
+            )
+
+            weakness = eval_data.get(
+                "weakness",
+                "今回の回答からは判断できません。"
+            )
 
 
-        # =================================================
-        # JSONの値を安全に取得
-        # =================================================
+            # -------------------------------------------------
+            # フィードバック保存
+            # -------------------------------------------------
 
-        is_correct = bool(
-            eval_data.get("is_correct", False)
-        )
-
-        judgement = eval_data.get(
-            "judgement",
-            "要修正・不正解",
-        )
-
-        feedback_text = eval_data.get(
-            "feedback",
-            "詳細なフィードバックを取得できませんでした。",
-        )
-
-        mistake_type = eval_data.get(
-            "mistake_type",
-            "other",
-        )
-
-        weakness = eval_data.get(
-            "weakness",
-            "今回の回答からは判断できません。",
-        )
+            st.session_state.feedback = (
+                f"**{judgement}**\n\n"
+                f"{feedback_text}\n\n"
+                f"**今回のつまずき分析**\n\n"
+                f"{weakness}"
+            )
 
 
-        # =================================================
-        # セッション状態へ保存
-        # =================================================
+            # -------------------------------------------------
+            # 学習履歴保存
+            # -------------------------------------------------
 
-        st.session_state.feedback = (
-            f"**{judgement}**\n\n"
-            f"{feedback_text}\n\n"
-            f"**今回のつまずき分析**\n\n"
-            f"{weakness}"
-        )
+            st.session_state.history.append(
+                {
+                    "question": (
+                        st.session_state.current_question
+                    ),
+                    "user_answer": user_answer,
+                    "correct_answer": (
+                        st.session_state.correct_answer
+                    ),
+                    "grammar_point": (
+                        st.session_state.current_grammar_point
+                    ),
+                    "difficulty": (
+                        st.session_state.current_difficulty
+                    ),
+                    "is_correct": is_correct,
+                    "mistake_type": mistake_type,
+                    "feedback": feedback_text,
+                    "weakness": weakness,
+                }
+            )
 
 
-        # =================================================
-        # 学習履歴へ保存
-        # =================================================
+            st.session_state.next_ready = True
 
-        st.session_state.history.append(
-            {
-                "question": st.session_state.current_question,
-                "user_answer": user_answer,
-                "correct_answer": st.session_state.correct_answer,
-                "grammar_point": st.session_state.current_grammar_point,
-                "difficulty": st.session_state.current_difficulty,
-                "is_correct": is_correct,
-                "mistake_type": mistake_type,
-                "feedback": feedback_text,
-                "weakness": weakness,
-            }
-        )
-
-        st.session_state.next_ready = True
-
-        st.rerun()
+            st.rerun()
 
 
 # =========================================================
@@ -397,16 +498,16 @@ if st.session_state.next_ready:
 
     if st.button(
         "次の類題に進む ➡️",
-        type="primary",
+        type="primary"
     ):
 
         with st.spinner(
             "これまでの解答履歴を分析し、次の問題を作成しています..."
         ):
 
-            # ---------------------------------------------
-            # 履歴をAIに渡す
-            # ---------------------------------------------
+            # -------------------------------------------------
+            # 履歴の整理
+            # -------------------------------------------------
 
             history_summary = ""
 
@@ -418,12 +519,15 @@ if st.session_state.next_ready:
 
                 for i, h in enumerate(
                     st.session_state.history,
-                    1,
+                    1
                 ):
 
                     status = (
                         "正解"
-                        if h.get("is_correct", False)
+                        if h.get(
+                            "is_correct",
+                            False
+                        )
                         else "不正解"
                     )
 
@@ -445,9 +549,9 @@ if st.session_state.next_ready:
                     )
 
 
-            # ---------------------------------------------
-            # 正答率・弱点情報を簡易集計
-            # ---------------------------------------------
+            # -------------------------------------------------
+            # 基本統計
+            # -------------------------------------------------
 
             total_q = len(
                 st.session_state.history
@@ -456,7 +560,10 @@ if st.session_state.next_ready:
             correct_q = sum(
                 1
                 for h in st.session_state.history
-                if h.get("is_correct", False)
+                if h.get(
+                    "is_correct",
+                    False
+                )
             )
 
             accuracy = (
@@ -466,9 +573,9 @@ if st.session_state.next_ready:
             )
 
 
-            # ---------------------------------------------
+            # -------------------------------------------------
             # 次問題生成プロンプト
-            # ---------------------------------------------
+            # -------------------------------------------------
 
             gen_prompt = f"""
 あなたは中学2年生向けの優秀な英語教材開発AIです。
@@ -481,9 +588,15 @@ if st.session_state.next_ready:
 {history_summary}
 
 【現在までの状況】
-総問題数：{total_q}
-正答数：{correct_q}
-全体正答率：{accuracy * 100:.1f}%
+
+総問題数：
+{total_q}
+
+正答数：
+{correct_q}
+
+全体正答率：
+{accuracy * 100:.1f}%
 
 【問題作成の基本方針】
 
@@ -497,50 +610,53 @@ if st.session_state.next_ready:
 8. 問題そのものに文法項目名を表示しない。
 9. 複数の正解が考えられる場合は、できるだけ避ける。
 10. 模範解答は自然で中学2年生に適した英文にする。
-11. grammar_pointには、その問題で測定したい文法知識を明確に記録する。
+11. grammar_pointには、その問題で測定したい具体的な文法知識を記録する。
 12. difficultyはbasicまたはintermediateのどちらかにする。
+13. 直前の問題と同じ問題を再利用しない。
+14. 生徒の誤答タイプも考慮する。
 
 特に重要なのは、
-「動名詞という単元が同じ」だけではなく、
-「生徒が直前まで苦手としている具体的な学習内容」
+
+「動名詞という単元が同じ」
+
+だけではなく、
+
+「生徒が具体的に何につまずいているのか」
+
 を考慮することです。
 
-以下のJSON形式のみで回答してください。
-Markdownのコードブロックや説明文は付けないでください。
+例えば、
 
-{{
-  "question": "次の日本語を英語に訳しなさい。「〇〇」",
-  "answer": "模範解答の英文",
-  "grammar_point": "like ＋ 動名詞",
-  "difficulty": "basic"
-}}
+- like ＋ 動名詞
+- enjoy ＋ 動名詞
+- finish ＋ 動名詞
+- stop ＋ 動名詞
+- 動名詞と不定詞の区別
+- 動詞のing形
+- 語順
+
+などを必要に応じて使い分けてください。
 """
 
 
-            # ---------------------------------------------
-            # AIによる問題生成
-            # ---------------------------------------------
+            # -------------------------------------------------
+            # AIによる次問題生成
+            # -------------------------------------------------
 
             try:
 
-                res = model.generate_content(
-                    gen_prompt
+                question_data = generate_json(
+                    gen_prompt,
+                    QUESTION_SCHEMA
                 )
 
-                data = extract_json(res.text)
+            except Exception as e:
 
-            except Exception:
+                # ---------------------------------------------
+                # AI生成失敗時のフォールバック
+                # ---------------------------------------------
 
-                data = None
-
-
-            # ---------------------------------------------
-            # AI生成失敗時の安全なフォールバック
-            # ---------------------------------------------
-
-            if data is None:
-
-                data = {
+                question_data = {
                     "question": (
                         '次の日本語を英語に訳しなさい。'
                         '「私は英語を勉強することを楽しんでいます。」'
@@ -554,38 +670,54 @@ Markdownのコードブロックや説明文は付けないでください。
                     "difficulty": "basic",
                 }
 
+                with st.expander(
+                    "⚠️ 開発用：AIエラー詳細"
+                ):
 
-            # ---------------------------------------------
-            # 生成された問題を保存
-            # ---------------------------------------------
+                    st.write(
+                        str(e)
+                    )
 
-            st.session_state.current_question = data.get(
-                "question",
-                (
-                    '次の日本語を英語に訳しなさい。'
-                    '「私は英語を勉強することを楽しんでいます。」'
-                ),
+
+            # -------------------------------------------------
+            # 新しい問題を保存
+            # -------------------------------------------------
+
+            st.session_state.current_question = (
+                question_data.get(
+                    "question",
+                    (
+                        '次の日本語を英語に訳しなさい。'
+                        '「私は英語を勉強することを楽しんでいます。」'
+                    )
+                )
             )
 
-            st.session_state.correct_answer = data.get(
-                "answer",
-                "I enjoy studying English.",
+            st.session_state.correct_answer = (
+                question_data.get(
+                    "answer",
+                    "I enjoy studying English."
+                )
             )
 
-            st.session_state.current_grammar_point = data.get(
-                "grammar_point",
-                "enjoy ＋ 動名詞",
+            st.session_state.current_grammar_point = (
+                question_data.get(
+                    "grammar_point",
+                    "enjoy ＋ 動名詞"
+                )
             )
 
-            st.session_state.current_difficulty = data.get(
-                "difficulty",
-                "basic",
+            st.session_state.current_difficulty = (
+                question_data.get(
+                    "difficulty",
+                    "basic"
+                )
             )
 
 
-            # ---------------------------------------------
+            # -------------------------------------------------
             # 状態リセット
-            # ---------------------------------------------
+            # -------------------------------------------------
 
             st.session_state.feedback = ""
 
@@ -606,6 +738,10 @@ if st.session_state.history:
         "📊 学習ダッシュボード（履歴・弱点分析）"
     ):
 
+        # -------------------------------------------------
+        # 基本統計
+        # -------------------------------------------------
+
         total_q = len(
             st.session_state.history
         )
@@ -613,7 +749,10 @@ if st.session_state.history:
         correct_count = sum(
             1
             for h in st.session_state.history
-            if h.get("is_correct", False)
+            if h.get(
+                "is_correct",
+                False
+            )
         )
 
         accuracy = (
@@ -623,34 +762,33 @@ if st.session_state.history:
         )
 
 
-        # ---------------------------------------------
-        # 基本統計
-        # ---------------------------------------------
-
         col1, col2, col3 = st.columns(3)
 
         with col1:
+
             st.metric(
                 label="総解答数",
-                value=f"{total_q} 問",
+                value=f"{total_q} 問"
             )
 
         with col2:
+
             st.metric(
                 label="正答数",
-                value=f"{correct_count} 問",
+                value=f"{correct_count} 問"
             )
 
         with col3:
+
             st.metric(
                 label="正答率",
-                value=f"{accuracy:.1f}%",
+                value=f"{accuracy:.1f}%"
             )
 
 
-        # ---------------------------------------------
-        # 文法項目ごとの集計
-        # ---------------------------------------------
+        # -------------------------------------------------
+        # 文法項目別集計
+        # -------------------------------------------------
 
         st.markdown(
             "#### 📚 文法項目ごとの学習状況"
@@ -658,14 +796,16 @@ if st.session_state.history:
 
         grammar_stats = {}
 
+
         for h in st.session_state.history:
 
             g_point = h.get(
                 "grammar_point",
-                "一般動名詞",
+                "一般動名詞"
             )
 
             if g_point not in grammar_stats:
+
                 grammar_stats[g_point] = {
                     "total": 0,
                     "correct": 0,
@@ -673,7 +813,11 @@ if st.session_state.history:
 
             grammar_stats[g_point]["total"] += 1
 
-            if h.get("is_correct", False):
+            if h.get(
+                "is_correct",
+                False
+            ):
+
                 grammar_stats[g_point]["correct"] += 1
 
 
@@ -696,24 +840,31 @@ if st.session_state.history:
             )
 
 
-        # ---------------------------------------------
+        # -------------------------------------------------
         # 誤答タイプ集計
-        # ---------------------------------------------
+        # -------------------------------------------------
 
         mistake_stats = {}
 
+
         for h in st.session_state.history:
 
-            if h.get("is_correct", False):
+            if h.get(
+                "is_correct",
+                False
+            ):
                 continue
 
             mistake = h.get(
                 "mistake_type",
-                "other",
+                "other"
             )
 
             mistake_stats[mistake] = (
-                mistake_stats.get(mistake, 0) + 1
+                mistake_stats.get(
+                    mistake,
+                    0
+                ) + 1
             )
 
 
@@ -726,7 +877,7 @@ if st.session_state.history:
             for mistake, count in sorted(
                 mistake_stats.items(),
                 key=lambda x: x[1],
-                reverse=True,
+                reverse=True
             ):
 
                 st.write(
@@ -734,17 +885,20 @@ if st.session_state.history:
                 )
 
 
-        # ---------------------------------------------
+        # -------------------------------------------------
         # 詳細履歴
-        # ---------------------------------------------
+        # -------------------------------------------------
 
         st.markdown(
             "#### 📝 過去の解答履歴"
         )
 
+
         for i, h in enumerate(
-            reversed(st.session_state.history),
-            1,
+            reversed(
+                st.session_state.history
+            ),
+            1
         ):
 
             question_number = (
@@ -753,7 +907,7 @@ if st.session_state.history:
 
             is_corr = h.get(
                 "is_correct",
-                False,
+                False
             )
 
             status = (
@@ -764,18 +918,19 @@ if st.session_state.history:
 
             g_point = h.get(
                 "grammar_point",
-                "一般動名詞",
+                "一般動名詞"
             )
 
             difficulty = h.get(
                 "difficulty",
-                "basic",
+                "basic"
             )
 
             mistake_type = h.get(
                 "mistake_type",
-                "other",
+                "other"
             )
+
 
             st.markdown(
                 f"**第{question_number}問** "
@@ -797,6 +952,7 @@ if st.session_state.history:
                 f"模範解答："
                 f"{h.get('correct_answer', '')}"
             )
+
 
             if not is_corr:
 
