@@ -5,7 +5,9 @@ import google.generativeai as genai
 
 # ページ設定
 st.set_page_config(
-    page_title="中2英語 AI個別学習支援ドリル (動名詞)", page_icon="📚", layout="centered"
+    page_title="中2英語 峯島先生の個別学習支援ドリル",
+    page_icon="📚",
+    layout="centered",
 )
 
 # APIキーの設定
@@ -14,10 +16,10 @@ if "GEMINI_API_KEY" in st.secrets:
 elif os.environ.get("GEMINI_API_KEY"):
   genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
-# モデルの初期化 (Gemini 3.8 Flash)
+# モデルの初期化 (安定動作する gemini-1.5-flash に変更)
 @st.cache_resource
 def get_model():
-  return genai.GenerativeModel("gemini-3.8-flash")
+  return genai.GenerativeModel("gemini-1.5-flash")
 
 
 model = get_model()
@@ -39,13 +41,13 @@ if "feedback" not in st.session_state:
 if "next_ready" not in st.session_state:
   st.session_state.next_ready = False
 
-st.title("📚 中2英語 AI個別学習支援ドリル")
+st.title("📚 中2英語 峯島先生の個別学習支援ドリル")
 st.markdown("### 単元：動名詞 (Gerund) - 適応型AI学習システム")
 st.markdown("---")
 
 # 1. 問題の表示
 st.info(
-    f"**【問題】**\n\n{st.session_state.current_question}\n\n*（現在の焦点文法項目: `{st.session_state.current_grammar_point}`）*"
+    f"**【問題】**\n\n{st.session_state.current_question}\n\n*（現在の焦点文法項目:`{st.session_state.current_grammar_point}`）*"
 )
 
 # 2. 解答入力フォーム
@@ -55,13 +57,13 @@ with st.form("answer_form"):
   )
   submit_button = st.form_submit_button("回答する 🚀")
 
-# 3. 採点・分析の処理
+# 3. 採点・分析の処理（エラーハンドリング追加）
 if submit_button and user_answer:
-  with st.spinner("AIが解答を分析中..."):
+  with st.spinner("峯島先生が解答を分析中..."):
     eval_prompt = f"""
     あなたは中学生に寄り添う親しみやすく優秀な英語教師、峯島先生です。
     以下の問題に対して、生徒が回答しました。峯島先生として優しく丁寧に採点し、つまずきを分析してください。
-    
+
     [問題]
     {st.session_state.current_question}
 
@@ -76,8 +78,14 @@ if submit_button and user_answer:
     2. なぜ間違えたのか、あるいはどこが素晴らしいかの丁寧な解説
     """
 
-    eval_response = model.generate_content(eval_prompt)
-    feedback_text = eval_response.text
+    try:
+      eval_response = model.generate_content(eval_prompt)
+      feedback_text = eval_response.text
+    except Exception as e:
+      feedback_text = (
+          "⚠️ APIの利用制限（混雑）により、峯島先生からの詳細なフィードバックの生成に一時的に失敗しました。"
+          "1分ほど時間を置いてから再度お試しください。（※正誤判定は模範解答と照合して記録されます）"
+      )
 
     # 正誤判定の判定補助
     is_correct = (
@@ -110,11 +118,11 @@ if st.session_state.feedback:
 # 5. 次の問題へ進むボタン（適応型学習：履歴を考慮して次の問題を生成）
 if st.session_state.next_ready:
   st.markdown("---")
-  if st.button("次の類題に進む（AIが難易度・項目を自動調整） ➡️"):
+  if st.button("次の類題に進む（峯島先生が難易度・項目を自動調整） ➡️"):
     with st.spinner(
         "生徒の解答履歴を分析し、最適な次の問題を作成中..."
     ):
-      # 過去の履歴を要約してプロンプトに反映（適応型学習の核心）
+      # 過去の履歴を要約してプロンプトに反映
       history_summary = ""
       if st.session_state.history:
         history_summary = "これまでの生徒の解答履歴：\n"
@@ -128,16 +136,16 @@ if st.session_state.next_ready:
           )
 
       gen_prompt = f"""
-      あなたは中2英語の優秀な教材開発AIです。動名詞の学習ドリルを作成しています。
+      あなたは中2英語の優秀な教材開発AIです。動名詞(gerund)の学習ドリルを作成しています。
       {history_summary}
 
-      上記を踏まえ、生徒のつまずき傾向（間違えた文法パターンなど）を考慮し、次に解くべき類題を1問作成してください。
+      上記を踏まえ、生徒のつまずき傾向を考慮し、次に解くべき類題を1問作成してください。
       必ず以下の【JSON形式】のみで出力してください（マークダウンの ```json やバッククォートは一切使わず、純粋なJSON文字列のみを出力してください）。
 
       {{
         "question": "次の日本語を英語に訳しなさい。「〇〇」 (...) の形式で記述",
         "answer": "模範解答の英文",
-        "grammar_point": "例: like + gerund, enjoy + gerund, finish + gerund, stop + gerund, 動名詞と不定詞の区別 など",
+        "grammar_point": "例: like ＋ 動名詞、enjoy ＋ 動名詞、finish ＋ 動名詞、stop ＋ 動名詞、動名詞と不定詞の区別 など（※必ず「〇〇 ＋ 動名詞」のように日本語で記述）",
         "difficulty": "basic または intermediate"
       }}
       """
@@ -145,23 +153,16 @@ if st.session_state.next_ready:
       try:
         res = model.generate_content(gen_prompt)
         res_text = res.text.strip()
-      except Exception as e:
-        st.error(
-            "⚠️ APIの利用制限（または混雑）により、問題の自動生成に一時的に失敗しました。"
-            "1分ほど時間を置いてから、もう一度ボタンを押してください。"
-        )
-        st.stop()
 
-      # マークダウンのコードブロックが含まれていた場合の保険処理
-      if res_text.startswith("```json"):
-        res_text = res_text[7:]
-      if res_text.startswith("```"):
-        res_text = res_text[3:]
-      if res_text.endswith("```"):
-        res_text = res_text[:-3]
-      res_text = res_text.strip()
+        # マークダウンのコードブロックが含まれていた場合の保険処理
+        if res_text.startswith("```json"):
+          res_text = res_text[7:]
+        if res_text.startswith("```"):
+          res_text = res_text[3:]
+        if res_text.endswith("```"):
+          res_text = res_text[:-3]
+        res_text = res_text.strip()
 
-      try:
         data = json.loads(res_text)
         st.session_state.current_question = data.get(
             "question",
@@ -171,23 +172,23 @@ if st.session_state.next_ready:
             "answer", "I enjoy watching movies."
         )
         st.session_state.current_grammar_point = data.get(
-            "grammar_point", "enjoy + gerund"
+            "grammar_point", "enjoy ＋ 動名詞"
         )
       except Exception:
-        # JSONパースエラー時のフォールバック
+        # JSONパースエラーやAPI制限時のフォールバック
         st.session_state.current_question = (
             "次の日本語を英語に訳しなさい。「私は宿題を終えました。」"
             "（finishを使用）"
         )
         st.session_state.correct_answer = "I finished doing my homework."
-        st.session_state.current_grammar_point = "finish + gerund"
+        st.session_state.current_grammar_point = "finish ＋ 動名詞"
 
       # 状態をリセット
       st.session_state.feedback = ""
       st.session_state.next_ready = False
       st.rerun()
 
-# 6. 学習ダッシュボード（ポートフォリオとしての価値を高める機能）
+# 6. 学習ダッシュボード
 if st.session_state.history:
   st.markdown("---")
   with st.expander("📊 あなたの学習ダッシュボード（履歴・弱点分析）"):
