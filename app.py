@@ -16,7 +16,7 @@ if "GEMINI_API_KEY" in st.secrets:
 elif os.environ.get("GEMINI_API_KEY"):
   genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
-# モデルの初期化 (安定動作する gemini-1.5-flash に変更)
+# モデルの初期化 (安定動作する gemini-1.5-flash)
 @st.cache_resource
 def get_model():
   return genai.GenerativeModel("gemini-1.5-flash")
@@ -24,11 +24,10 @@ def get_model():
 
 model = get_model()
 
-# セッション状態の初期化
+# セッション状態の初期化（問題文から余計なヒントを排除）
 if "current_question" not in st.session_state:
   st.session_state.current_question = (
       "次の日本語を英語に訳しなさい。「私はテニスをすることが好きです。」"
-      "（playを使わず、likeを使用）"
   )
 if "correct_answer" not in st.session_state:
   st.session_state.correct_answer = "I like playing tennis."
@@ -42,12 +41,12 @@ if "next_ready" not in st.session_state:
   st.session_state.next_ready = False
 
 st.title("📚 中2英語 峯島先生の個別学習支援ドリル")
-st.markdown("### 単元：動名詞 - 適応型AI学習システム")
+st.markdown("### 単元：動名詞 (Gerund) - 適応型AI学習システム")
 st.markdown("---")
 
-# 1. 問題の表示
+# 1. 問題の表示（余計な文法項目やヒントの表示を完全に排除）
 st.info(
-    f"**【問題】**\n\n{st.session_state.current_question}\n\n*（現在の焦点文法項目:`{st.session_state.current_grammar_point}`）*"
+    f"**【問題】**\n\n{st.session_state.current_question}"
 )
 
 # 2. 解答入力フォーム
@@ -57,7 +56,7 @@ with st.form("answer_form"):
   )
   submit_button = st.form_submit_button("回答する 🚀")
 
-# 3. 採点・分析の処理（エラーハンドリング追加）
+# 3. 採点・分析の処理
 if submit_button and user_answer:
   with st.spinner("峯島先生が解答を分析中..."):
     eval_prompt = f"""
@@ -87,7 +86,6 @@ if submit_button and user_answer:
           "1分ほど時間を置いてから再度お試しください。（※正誤判定は模範解答と照合して記録されます）"
       )
 
-    # 正誤判定の判定補助
     is_correct = (
         "正解！" in feedback_text
         or user_answer.strip().lower()
@@ -96,7 +94,6 @@ if submit_button and user_answer:
 
     st.session_state.feedback = feedback_text
 
-    # 履歴への保存（文法タグや正誤を詳細に蓄積）
     st.session_state.history.append({
         "question": st.session_state.current_question,
         "user_answer": user_answer,
@@ -115,14 +112,13 @@ if st.session_state.feedback:
   st.markdown("### 🔍 峯島先生からのフィードバック・分析")
   st.write(st.session_state.feedback)
 
-# 5. 次の問題へ進むボタン（適応型学習：履歴を考慮して次の問題を生成）
+# 5. 次の問題へ進むボタン（適応型学習：問題文にヒントを入れないよう指示を強化）
 if st.session_state.next_ready:
   st.markdown("---")
   if st.button("次の類題に進む（峯島先生が難易度・項目を自動調整） ➡️"):
     with st.spinner(
         "生徒の解答履歴を分析し、最適な次の問題を作成中..."
     ):
-      # 過去の履歴を要約してプロンプトに反映
       history_summary = ""
       if st.session_state.history:
         history_summary = "これまでの生徒の解答履歴：\n"
@@ -140,12 +136,16 @@ if st.session_state.next_ready:
       {history_summary}
 
       上記を踏まえ、生徒のつまずき傾向を考慮し、次に解くべき類題を1問作成してください。
+      【重要なお願い】
+      - 問題文の中に正解の単語や、「〜を使わず…を使用」といった答えに直結する余計なヒントや指定は一切入れないでください。
+      - 生徒が自力で文脈を考えられるような、自然な和文英訳の問題（例：「次の日本語を英語に訳しなさい。『〇〇』」）にしてください。
+      
       必ず以下の【JSON形式】のみで出力してください（マークダウンの ```json やバッククォートは一切使わず、純粋なJSON文字列のみを出力してください）。
 
       {{
-        "question": "次の日本語を英語に訳しなさい。「〇〇」 (...) の形式で記述",
+        "question": "次の日本語を英語に訳しなさい。「〇〇」",
         "answer": "模範解答の英文",
-        "grammar_point": "例: like ＋ 動名詞、enjoy ＋ 動名詞、finish ＋ 動名詞、stop ＋ 動名詞、動名詞と不定詞の区別 など（※必ず「〇〇 ＋ 動名詞」のように日本語で記述）",
+        "grammar_point": "like ＋ 動名詞、enjoy ＋ 動名詞、finish ＋ 動名詞、stop ＋ 動名詞、動名詞と不定詞の区別 など",
         "difficulty": "basic または intermediate"
       }}
       """
@@ -154,7 +154,6 @@ if st.session_state.next_ready:
         res = model.generate_content(gen_prompt)
         res_text = res.text.strip()
 
-        # マークダウンのコードブロックが含まれていた場合の保険処理
         if res_text.startswith("```json"):
           res_text = res_text[7:]
         if res_text.startswith("```"):
@@ -175,15 +174,12 @@ if st.session_state.next_ready:
             "grammar_point", "enjoy ＋ 動名詞"
         )
       except Exception:
-        # JSONパースエラーやAPI制限時のフォールバック
         st.session_state.current_question = (
             "次の日本語を英語に訳しなさい。「私は宿題を終えました。」"
-            "（finishを使用）"
         )
         st.session_state.correct_answer = "I finished doing my homework."
         st.session_state.current_grammar_point = "finish ＋ 動名詞"
 
-      # 状態をリセット
       st.session_state.feedback = ""
       st.session_state.next_ready = False
       st.rerun()
