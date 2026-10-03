@@ -134,7 +134,7 @@ if "next_ready" not in st.session_state:
 st.title("📚 中2英語 個別学習支援ドリル")
 
 st.markdown(
-    "### 単元：動名詞 (Gerund) - 適応型AI学習システム"
+    "### 単元：動名詞 - 適応型AI学習システム"
 )
 
 st.caption(
