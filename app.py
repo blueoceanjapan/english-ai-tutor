@@ -183,7 +183,9 @@ if st.session_state.history:
   st.markdown("---")
   with st.expander("📊 あなたの学習ダッシュボード（履歴・弱点分析）"):
     total_q = len(st.session_state.history)
-    correct_count = sum(1 for h in st.session_state.history if h["is_correct"])
+    correct_count = sum(
+        1 for h in st.session_state.history if h.get("is_correct", False)
+    )
     accuracy = (correct_count / total_q) * 100 if total_q > 0 else 0
 
     col1, col2 = st.columns(2)
@@ -194,12 +196,13 @@ if st.session_state.history:
 
     st.markdown("#### 📝 過去の解答履歴と文法タグ")
     for i, h in enumerate(reversed(st.session_state.history), 1):
-      status_icon = "🟢 正解" if h["is_correct"] else "🔴 要復習"
+      is_corr = h.get("is_correct", False)
+      status_icon = "🟢 正解" if is_corr else "🔴 要復習"
+      g_point = h.get("grammar_point", "一般動名詞")
       st.markdown(
-          f"**第 {total_q - i + 1} 問** | 項目: `{h['grammar_point']}` -"
-          f" {status_icon}"
+          f"**第 {total_q - i + 1} 問** | 項目: `{g_point}` - {status_icon}"
       )
-      st.text(f"問題: {h['question']}")
-      st.text(f"あなたの回答: {h['user_answer']}")
-      st.text(f"模範解答: {h['correct_answer']}")
+      st.text(f"問題: {h.get('question', '')}")
+      st.text(f"あなたの回答: {h.get('user_answer', '')}")
+      st.text(f"模範解答: {h.get('correct_answer', '')}")
       st.markdown("---")
