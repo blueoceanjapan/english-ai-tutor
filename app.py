@@ -971,9 +971,7 @@ def calculate_objective_stats():
             "accuracy": 0.0,
         }
 
-    for record in (
-        st.session_state.history
-    ):
+    for record in st.session_state.history:
 
         objective_id = record.get(
             "objective"
