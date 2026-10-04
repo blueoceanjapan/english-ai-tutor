@@ -873,12 +873,6 @@ def create_session_copy_text(
         key=history_sort_key,
     )
 
-    first = records[0]
-    session_number = first.get(
-        "batch_number",
-        "",
-    )
-
     total = len(records)
     correct = sum(
         1
@@ -901,9 +895,29 @@ def create_session_copy_text(
     }
 
     mistake_counts = {}
+    objective_counts = {}
+
     for record in records:
+        objective_name = record.get(
+            "objective_name",
+            record.get("objective", ""),
+        )
+
+        if objective_name:
+            if objective_name not in objective_counts:
+                objective_counts[objective_name] = {
+                    "total": 0,
+                    "correct": 0,
+                }
+
+            objective_counts[objective_name]["total"] += 1
+
+            if record.get("is_correct", False):
+                objective_counts[objective_name]["correct"] += 1
+
         if record.get("is_correct", False):
             continue
+
         mistake_type = record.get(
             "mistake_type",
             "other",
@@ -912,16 +926,40 @@ def create_session_copy_text(
             mistake_counts.get(mistake_type, 0) + 1
         )
 
+    first_timestamp = records[0].get("timestamp", "")
+    last_timestamp = records[-1].get("timestamp", "")
+
     lines = [
-        "【中2英語 個別学習支援ドリル｜直近セッション結果】",
-        f"セッション（セット）：{session_number}",
-        f"実施日時（記録上）：{first.get('timestamp', '')}",
+        "【中2英語 個別学習支援ドリル｜現在の学習セッション結果】",
+        "※現在のStreamlitセッション内で記録された全問題を対象としています。",
+        f"実施開始時刻（記録上）：{first_timestamp}",
+        f"直近記録時刻（記録上）：{last_timestamp}",
         f"問題数：{total}問",
         f"正解：{correct}問",
         f"正答率：{accuracy:.1f}%",
         "",
-        "【問題・解答・分析】",
+        "【学習項目別の結果】",
     ]
+
+    if not objective_counts:
+        lines.append("データなし")
+    else:
+        for objective_name, stat in objective_counts.items():
+            objective_accuracy = (
+                stat["correct"] / stat["total"] * 100
+                if stat["total"]
+                else 0
+            )
+            lines.append(
+                f"- {objective_name}："
+                f"{stat['correct']}/{stat['total']}問正解 "
+                f"（{objective_accuracy:.1f}%）"
+            )
+
+    lines.extend([
+        "",
+        "【問題・解答・分析材料】",
+    ])
 
     for record in records:
         is_correct = record.get("is_correct", False)
@@ -941,6 +979,8 @@ def create_session_copy_text(
         lines.extend([
             "",
             f"第{record.get('question_number', '')}問",
+            f"セット：{record.get('batch_number', '')}",
+            f"問題ID：{record.get('question_id', '')}",
             f"学習項目：{record.get('objective_name', '')}",
             f"難易度：{record.get('difficulty', '')}",
             f"日本語：{record.get('japanese', '')}",
@@ -954,7 +994,7 @@ def create_session_copy_text(
 
     lines.extend([
         "",
-        "【今回の誤答分析】",
+        "【セッション全体の誤答内訳】",
     ])
 
     if not mistake_counts:
@@ -972,7 +1012,8 @@ def create_session_copy_text(
     lines.extend([
         "",
         "【分析上の注意】",
-        "この分析は直近セッションの解答データに基づく機械的な整理です。",
+        "このデータは現在のStreamlitセッション内の学習結果をまとめたものです。",
+        "誤答タイプは選択肢に設定された機械的な分類であり、根本原因の診断ではありません。",
         "複数セッションのデータがない段階では、恒常的な学習上の弱点や根本原因を断定しません。",
     ])
 
@@ -1744,38 +1785,27 @@ st.caption(
 
 if st.session_state.history:
 
-    sorted_all_history = get_sorted_history()
+    with st.expander(
+        "🧪 開発者向け：学習セッション結果をコピー",
+        expanded=False,
+    ):
 
-    latest_batch_number = max(
-        int(record.get("batch_number", 0))
-        for record in sorted_all_history
-    )
+        current_session_records = get_sorted_history()
 
-    latest_session_records = [
-        record
-        for record in sorted_all_history
-        if int(record.get("batch_number", 0))
-        == latest_batch_number
-    ]
+        st.caption(
+            "現在のStreamlitセッション内で記録された全問題をまとめます。"
+            "5問ごとのセットではなく、10問なら10問分を一括で取得できます。"
+            "下のコード欄のコピー機能で、このチャットへ貼り付けてください。"
+        )
 
-    st.markdown(
-        "### 🧪 開発者向け：直近セッション結果をコピー"
-    )
+        session_copy_text = create_session_copy_text(
+            current_session_records
+        )
 
-    st.caption(
-        "直近の5問について、問題・解答・正誤・誤答タイプ・"
-        "フィードバック・機械的な誤答集計をまとめます。"
-        "下のコード欄のコピー機能で、そのままこのチャットへ貼り付けられます。"
-    )
-
-    session_copy_text = create_session_copy_text(
-        latest_session_records
-    )
-
-    st.code(
-        session_copy_text,
-        language="text",
-    )
+        st.code(
+            session_copy_text,
+            language="text",
+        )
 
 
 # =========================================================
