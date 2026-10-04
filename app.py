@@ -14,7 +14,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.5.1"
+APP_VERSION = "1.5.2"
 STATE_VERSION = 7
 QUESTIONS_PER_BATCH = 5
 
@@ -319,6 +319,34 @@ def initialize_state():
 
 
 initialize_state()
+
+
+# =========================================================
+# ページ先頭へのスクロール
+# =========================================================
+
+if st.session_state.get(
+    "scroll_to_top",
+    False,
+):
+
+    st.html(
+        """
+        <script>
+        setTimeout(function () {
+            window.scrollTo(0, 0);
+            if (window.parent) {
+                window.parent.scrollTo(0, 0);
+            }
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        }, 100);
+        </script>
+        """,
+        unsafe_allow_javascript=True,
+    )
+
+    st.session_state.scroll_to_top = False
 
 
 # =========================================================
@@ -1298,6 +1326,8 @@ if (
             st.session_state.batch_submitted = (
                 False
             )
+
+            st.session_state.scroll_to_top = True
 
             st.rerun()
 
