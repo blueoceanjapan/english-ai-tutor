@@ -861,6 +861,124 @@ def calculate_batch_mistake_stats(
     return mistake_stats
 
 
+def create_session_copy_text(
+    records,
+):
+
+    if not records:
+        return ""
+
+    records = sorted(
+        records,
+        key=history_sort_key,
+    )
+
+    first = records[0]
+    session_number = first.get(
+        "batch_number",
+        "",
+    )
+
+    total = len(records)
+    correct = sum(
+        1
+        for record in records
+        if record.get("is_correct", False)
+    )
+    accuracy = (
+        correct / total * 100
+        if total
+        else 0
+    )
+
+    mistake_labels = {
+        "base_form": "原形を選択",
+        "past_form": "過去形を選択",
+        "third_person": "三単現の形を選択",
+        "other": "その他",
+        "invalid_answer": "無効な回答",
+        "unanswered": "未回答",
+    }
+
+    mistake_counts = {}
+    for record in records:
+        if record.get("is_correct", False):
+            continue
+        mistake_type = record.get(
+            "mistake_type",
+            "other",
+        )
+        mistake_counts[mistake_type] = (
+            mistake_counts.get(mistake_type, 0) + 1
+        )
+
+    lines = [
+        "【中2英語 個別学習支援ドリル｜直近セッション結果】",
+        f"セッション（セット）：{session_number}",
+        f"実施日時（記録上）：{first.get('timestamp', '')}",
+        f"問題数：{total}問",
+        f"正解：{correct}問",
+        f"正答率：{accuracy:.1f}%",
+        "",
+        "【問題・解答・分析】",
+    ]
+
+    for record in records:
+        is_correct = record.get("is_correct", False)
+        judgement = record.get(
+            "judgement",
+            "",
+        )
+        mistake_type = record.get(
+            "mistake_type",
+            "",
+        )
+        mistake_label = mistake_labels.get(
+            mistake_type,
+            mistake_type,
+        )
+
+        lines.extend([
+            "",
+            f"第{record.get('question_number', '')}問",
+            f"学習項目：{record.get('objective_name', '')}",
+            f"難易度：{record.get('difficulty', '')}",
+            f"日本語：{record.get('japanese', '')}",
+            f"英文：{record.get('english', '')}",
+            f"選択した答え：{record.get('user_answer', '')}．{record.get('user_answer_value', '')}",
+            f"正解：{record.get('correct_answer', '')}．{record.get('correct_value', '')}",
+            f"判定：{judgement}",
+            f"誤答タイプ：{mistake_label}",
+            f"フィードバック：{record.get('feedback', '')}",
+        ])
+
+    lines.extend([
+        "",
+        "【今回の誤答分析】",
+    ])
+
+    if not mistake_counts:
+        lines.append("誤答なし")
+    else:
+        for mistake_type, count in sorted(
+            mistake_counts.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        ):
+            lines.append(
+                f"- {mistake_labels.get(mistake_type, mistake_type)}：{count}問"
+            )
+
+    lines.extend([
+        "",
+        "【分析上の注意】",
+        "この分析は直近セッションの解答データに基づく機械的な整理です。",
+        "複数セッションのデータがない段階では、恒常的な学習上の弱点や根本原因を断定しません。",
+    ])
+
+    return "\n".join(lines)
+
+
 # =========================================================
 # JSON保存・復元
 # =========================================================
@@ -1618,6 +1736,46 @@ st.caption(
     "現在の試験版では、学習履歴をJSONファイルとして"
     "保存・復元できます。"
 )
+
+
+# =========================================================
+# 開発者向け：直近セッション結果のコピー
+# =========================================================
+
+if st.session_state.history:
+
+    sorted_all_history = get_sorted_history()
+
+    latest_batch_number = max(
+        int(record.get("batch_number", 0))
+        for record in sorted_all_history
+    )
+
+    latest_session_records = [
+        record
+        for record in sorted_all_history
+        if int(record.get("batch_number", 0))
+        == latest_batch_number
+    ]
+
+    st.markdown(
+        "### 🧪 開発者向け：直近セッション結果をコピー"
+    )
+
+    st.caption(
+        "直近の5問について、問題・解答・正誤・誤答タイプ・"
+        "フィードバック・機械的な誤答集計をまとめます。"
+        "下のコード欄のコピー機能で、そのままこのチャットへ貼り付けられます。"
+    )
+
+    session_copy_text = create_session_copy_text(
+        latest_session_records
+    )
+
+    st.code(
+        session_copy_text,
+        language="text",
+    )
 
 
 # =========================================================
