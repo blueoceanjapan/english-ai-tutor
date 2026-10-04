@@ -324,26 +324,83 @@ initialize_state()
 # =========================================================
 # ページ先頭へのスクロール
 # =========================================================
+#
+# st.rerun() だけでは、ブラウザのスクロール位置は
+# 必ずしもページ先頭へ移動しません。
+#
+# そこで、JavaScriptを実行できるHTMLコンポーネントから
+# Streamlit本体のスクロール領域を直接先頭へ移動します。
+# width をバッチ番号に応じて変えることで、
+# 「次の5問へ」を押すたびにコンポーネントを再実行します。
+# =========================================================
 
 if st.session_state.get(
     "scroll_to_top",
     False,
 ):
 
-    st.html(
+    import streamlit.components.v1 as components
+
+    scroll_component_width = (
+        1
+        + (
+            st.session_state.batch_number
+            % 2
+        )
+    )
+
+    components.html(
         """
         <script>
-        setTimeout(function () {
-            window.scrollTo(0, 0);
-            if (window.parent) {
-                window.parent.scrollTo(0, 0);
+        (function () {
+            function scrollToTop() {
+                try {
+                    const parentDocument = window.parent.document;
+
+                    const main =
+                        parentDocument.querySelector('section.main') ||
+                        parentDocument.querySelector('[data-testid="stMain"]') ||
+                        parentDocument.querySelector('[data-testid="stAppViewMain"]');
+
+                    if (main) {
+                        main.scrollTop = 0;
+                        if (typeof main.scrollTo === 'function') {
+                            main.scrollTo({
+                                top: 0,
+                                left: 0,
+                                behavior: 'auto'
+                            });
+                        }
+                    }
+
+                    if (parentDocument.scrollingElement) {
+                        parentDocument.scrollingElement.scrollTop = 0;
+                    }
+
+                    parentDocument.documentElement.scrollTop = 0;
+                    parentDocument.body.scrollTop = 0;
+                    window.parent.scrollTo(0, 0);
+                } catch (e) {
+                    try {
+                        window.parent.scrollTo(0, 0);
+                    } catch (_) {
+                        // Ignore browser-specific scroll errors.
+                    }
+                }
             }
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
-        }, 100);
+
+            // Streamlitが再描画を完了した後にも実行するため、
+            // 少し間隔を空けて複数回実行します。
+            setTimeout(scrollToTop, 0);
+            setTimeout(scrollToTop, 100);
+            setTimeout(scrollToTop, 300);
+            setTimeout(scrollToTop, 700);
+        })();
         </script>
         """,
-        unsafe_allow_javascript=True,
+        width=scroll_component_width,
+        height=1,
+        scrolling=False,
     )
 
     st.session_state.scroll_to_top = False
