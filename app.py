@@ -19,7 +19,8 @@ st.set_page_config(
 )
 
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
+STATE_VERSION = 2
 MODEL_NAME = "gemini-3.8-flash"
 
 
@@ -27,11 +28,9 @@ MODEL_NAME = "gemini-3.8-flash"
 # 教育設計
 # =========================================================
 #
-# この部分はAIに決めさせない。
+# 「何を学ばせるのか」をAIに決めさせない。
+# 学習目標はアプリ側で明示的に定義する。
 #
-# 「何を学ばせるのか」をアプリ側で明示的に定義する。
-#
-
 
 LEARNING_OBJECTIVES = {
     "gerund_basic": {
@@ -41,22 +40,30 @@ LEARNING_OBJECTIVES = {
     },
     "like_gerund": {
         "name": "like + 動名詞",
-        "description": "like の後ろに動名詞を使って「～することが好き」と表現できる。",
+        "description": (
+            "like の後ろに動名詞を使って「～することが好き」と表現できる。"
+        ),
         "target": "like + 動名詞",
     },
     "enjoy_gerund": {
         "name": "enjoy + 動名詞",
-        "description": "enjoy の後ろに動名詞を使って「～することを楽しむ」と表現できる。",
+        "description": (
+            "enjoy の後ろに動名詞を使って「～することを楽しむ」と表現できる。"
+        ),
         "target": "enjoy + 動名詞",
     },
     "finish_gerund": {
         "name": "finish + 動名詞",
-        "description": "finish の後ろに動名詞を使って「～し終える」と表現できる。",
+        "description": (
+            "finish の後ろに動名詞を使って「～し終える」と表現できる。"
+        ),
         "target": "finish + 動名詞",
     },
     "gerund_vs_infinitive": {
         "name": "動名詞と不定詞の区別",
-        "description": "今回の学習目標で指定された動名詞と不定詞を区別できる。",
+        "description": (
+            "今回の学習目標で指定された動名詞と不定詞を区別できる。"
+        ),
         "target": "動名詞・不定詞の使い分け",
     },
 }
@@ -67,151 +74,201 @@ LEARNING_OBJECTIVES = {
 # =========================================================
 #
 # 第1段階ではAIに問題を作らせない。
-#
 # 問題・正解・学習目標・難易度を開発者側で管理する。
 #
-# accepted_answers:
-#   完全一致で正解として認める表現。
-#
-# require_target_pattern:
-#   今回測定したい文法を必ず使わせるかどうか。
-#
-# ここを今後、教材研究・実利用を通して増やしていく。
-#
-
 
 QUESTION_BANK = [
     {
         "id": "like_001",
         "objective": "like_gerund",
         "difficulty": 1,
-        "question": "次の日本語を英語に訳しなさい。\n「私はテニスをすることが好きです。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「私はテニスをすることが好きです。」"
+        ),
         "model_answer": "I like playing tennis.",
         "accepted_answers": [
             "I like playing tennis.",
         ],
         "require_target_pattern": True,
-        "explanation": "like の後ろでは、今回の学習目標として動名詞 playing を使います。",
+        "explanation": (
+            "like の後ろでは、今回の学習目標として "
+            "動名詞 playing を使います。"
+        ),
     },
     {
         "id": "like_002",
         "objective": "like_gerund",
         "difficulty": 1,
-        "question": "次の日本語を英語に訳しなさい。\n「私は音楽を聴くことが好きです。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「私は音楽を聴くことが好きです。」"
+        ),
         "model_answer": "I like listening to music.",
         "accepted_answers": [
             "I like listening to music.",
         ],
         "require_target_pattern": True,
-        "explanation": "like の後ろに listening を使います。",
+        "explanation": (
+            "like の後ろに listening を使います。"
+        ),
     },
     {
         "id": "like_003",
         "objective": "like_gerund",
         "difficulty": 2,
-        "question": "次の日本語を英語に訳しなさい。\n「彼女は本を読むことが好きです。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「彼女は本を読むことが好きです。」"
+        ),
         "model_answer": "She likes reading books.",
         "accepted_answers": [
             "She likes reading books.",
         ],
         "require_target_pattern": True,
-        "explanation": "主語が she なので like は likes になります。その後ろに reading を使います。",
+        "explanation": (
+            "主語が she なので like は likes になります。"
+            "その後ろに reading を使います。"
+        ),
     },
     {
         "id": "enjoy_001",
         "objective": "enjoy_gerund",
         "difficulty": 1,
-        "question": "次の日本語を英語に訳しなさい。\n「私は英語を勉強することを楽しんでいます。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「私は英語を勉強することを楽しんでいます。」"
+        ),
         "model_answer": "I enjoy studying English.",
         "accepted_answers": [
             "I enjoy studying English.",
         ],
         "require_target_pattern": True,
-        "explanation": "enjoy の後ろには studying のような動名詞を使います。",
+        "explanation": (
+            "enjoy の後ろには studying のような動名詞を使います。"
+        ),
     },
     {
         "id": "enjoy_002",
         "objective": "enjoy_gerund",
         "difficulty": 1,
-        "question": "次の日本語を英語に訳しなさい。\n「私は料理をすることを楽しんでいます。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「私は料理をすることを楽しんでいます。」"
+        ),
         "model_answer": "I enjoy cooking.",
         "accepted_answers": [
             "I enjoy cooking.",
         ],
         "require_target_pattern": True,
-        "explanation": "enjoy の後ろに cooking を使います。",
+        "explanation": (
+            "enjoy の後ろに cooking を使います。"
+        ),
     },
     {
         "id": "enjoy_003",
         "objective": "enjoy_gerund",
         "difficulty": 2,
-        "question": "次の日本語を英語に訳しなさい。\n「彼はサッカーをすることを楽しんでいます。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「彼はサッカーをすることを楽しんでいます。」"
+        ),
         "model_answer": "He enjoys playing soccer.",
         "accepted_answers": [
             "He enjoys playing soccer.",
         ],
         "require_target_pattern": True,
-        "explanation": "主語が he なので enjoys になります。その後ろに playing を使います。",
+        "explanation": (
+            "主語が he なので enjoys になります。"
+            "その後ろに playing を使います。"
+        ),
     },
     {
         "id": "finish_001",
         "objective": "finish_gerund",
         "difficulty": 1,
-        "question": "次の日本語を英語に訳しなさい。\n「私は宿題を終えました。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「私は宿題を終えました。」"
+        ),
         "model_answer": "I finished doing my homework.",
         "accepted_answers": [
             "I finished doing my homework.",
         ],
         "require_target_pattern": True,
-        "explanation": "finish の後ろに doing のような動名詞を使います。",
+        "explanation": (
+            "finish の後ろに doing のような動名詞を使います。"
+        ),
     },
     {
         "id": "finish_002",
         "objective": "finish_gerund",
         "difficulty": 1,
-        "question": "次の日本語を英語に訳しなさい。\n「彼女は昼食を食べ終えました。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「彼女は昼食を食べ終えました。」"
+        ),
         "model_answer": "She finished eating lunch.",
         "accepted_answers": [
             "She finished eating lunch.",
         ],
         "require_target_pattern": True,
-        "explanation": "finish の後ろに eating を使います。",
+        "explanation": (
+            "finish の後ろに eating を使います。"
+        ),
     },
     {
         "id": "basic_001",
         "objective": "gerund_basic",
         "difficulty": 1,
-        "question": "次の日本語を英語に訳しなさい。\n「泳ぐことは楽しいです。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「泳ぐことは楽しいです。」"
+        ),
         "model_answer": "Swimming is fun.",
         "accepted_answers": [
             "Swimming is fun.",
         ],
         "require_target_pattern": True,
-        "explanation": "Swimming が文の主語として使われています。",
+        "explanation": (
+            "Swimming が文の主語として使われています。"
+        ),
     },
     {
         "id": "basic_002",
         "objective": "gerund_basic",
         "difficulty": 1,
-        "question": "次の日本語を英語に訳しなさい。\n「本を読むことは大切です。」",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「本を読むことは大切です。」"
+        ),
         "model_answer": "Reading books is important.",
         "accepted_answers": [
             "Reading books is important.",
         ],
         "require_target_pattern": True,
-        "explanation": "Reading books が文の主語として使われています。",
+        "explanation": (
+            "Reading books が文の主語として使われています。"
+        ),
     },
     {
         "id": "compare_001",
         "objective": "gerund_vs_infinitive",
         "difficulty": 2,
-        "question": "次の日本語を英語に訳しなさい。\n「私はテニスをすることが好きです。」\n\n今回の問題では、動名詞を使いなさい。",
+        "question": (
+            "次の日本語を英語に訳しなさい。\n"
+            "「私はテニスをすることが好きです。」\n\n"
+            "今回の問題では、動名詞を使いなさい。"
+        ),
         "model_answer": "I like playing tennis.",
         "accepted_answers": [
             "I like playing tennis.",
         ],
         "require_target_pattern": True,
-        "explanation": "今回の学習目標では like の後ろに動名詞 playing を使います。",
+        "explanation": (
+            "今回の学習目標では like の後ろに "
+            "動名詞 playing を使います。"
+        ),
     },
 ]
 
@@ -219,11 +276,6 @@ QUESTION_BANK = [
 # =========================================================
 # AI採点用JSONスキーマ
 # =========================================================
-#
-# AIは「問題を作る」のではなく、
-# 生徒の自由記述答案について教育的な説明を行う。
-#
-
 
 FEEDBACK_SCHEMA = {
     "type": "object",
@@ -271,7 +323,7 @@ FEEDBACK_SCHEMA = {
 
 
 # =========================================================
-# Gemini API
+# Gemini APIキー
 # =========================================================
 
 
@@ -290,9 +342,15 @@ api_key = get_api_key()
 if not api_key:
     st.error(
         "Gemini APIキーが設定されていません。\n\n"
-        "Streamlit Secrets または環境変数 GEMINI_API_KEY を設定してください。"
+        "Streamlit Secrets または環境変数 GEMINI_API_KEY "
+        "を設定してください。"
     )
     st.stop()
+
+
+# =========================================================
+# Geminiクライアント
+# =========================================================
 
 
 @st.cache_resource
@@ -309,22 +367,50 @@ client = get_client(api_key)
 
 
 def initialize_state():
-    """アプリ起動時の初期状態を作る。"""
+    """
+    アプリ起動時のセッション状態を初期化する。
 
-    if "current_question_id" not in st.session_state:
+    旧バージョンとの互換性を考慮し、
+    STATE_VERSION が変わった場合には
+    互換性のない一時状態を初期化する。
+    """
+
+    current_state_version = st.session_state.get(
+        "state_version"
+    )
+
+    if current_state_version != STATE_VERSION:
+
+        # 問題・表示状態は安全側に初期化
         st.session_state.current_question_id = "like_001"
+        st.session_state.feedback = None
+        st.session_state.last_result = None
+        st.session_state.next_ready = False
 
-    if "history" not in st.session_state:
+        # 学習履歴は旧形式との互換性が保証できないため、
+        # 状態バージョン変更時には初期化する。
+        #
+        # 今後はJSON保存・復元を利用して学習履歴を保持できる。
         st.session_state.history = []
 
-    if "feedback" not in st.session_state:
-        st.session_state.feedback = None
+        st.session_state.state_version = STATE_VERSION
 
-    if "last_result" not in st.session_state:
-        st.session_state.last_result = None
+    else:
 
-    if "next_ready" not in st.session_state:
-        st.session_state.next_ready = False
+        if "current_question_id" not in st.session_state:
+            st.session_state.current_question_id = "like_001"
+
+        if "history" not in st.session_state:
+            st.session_state.history = []
+
+        if "feedback" not in st.session_state:
+            st.session_state.feedback = None
+
+        if "last_result" not in st.session_state:
+            st.session_state.last_result = None
+
+        if "next_ready" not in st.session_state:
+            st.session_state.next_ready = False
 
     if "student_name" not in st.session_state:
         st.session_state.student_name = ""
@@ -342,6 +428,7 @@ def get_question(question_id):
     """問題IDから問題を取得する。"""
 
     for question in QUESTION_BANK:
+
         if question["id"] == question_id:
             return question
 
@@ -349,7 +436,9 @@ def get_question(question_id):
 
 
 def get_current_question():
-    return get_question(st.session_state.current_question_id)
+    return get_question(
+        st.session_state.current_question_id
+    )
 
 
 # =========================================================
@@ -359,34 +448,49 @@ def get_current_question():
 
 def normalize_answer(text):
     """
-    英作文の比較用に最低限の正規化を行う。
+    英作文比較用の最低限の正規化。
 
-    大文字・小文字、前後空白、余分な空白を統一する。
-    文法そのものを変更するような正規化は行わない。
+    ・前後空白を削除
+    ・連続空白を1つにする
+    ・大文字小文字を統一
+    ・アポストロフィ表記を統一
+
+    文法そのものを変更するような
+    過度な正規化は行わない。
     """
 
     text = text.strip().lower()
 
-    text = re.sub(r"\s+", " ", text)
+    text = re.sub(
+        r"\s+",
+        " ",
+        text,
+    )
 
-    text = text.replace("’", "'")
+    text = text.replace(
+        "’",
+        "'",
+    )
 
     return text
 
 
 # =========================================================
-# 完全一致による一次判定
+# コード側による一次判定
 # =========================================================
 
 
-def deterministic_check(question, user_answer):
+def deterministic_check(
+    question,
+    user_answer,
+):
     """
     コード側で確実に判定できる部分を先に判定する。
-
-    AIに任せる前に、問題バンクに登録した正解と比較する。
     """
 
-    normalized_user = normalize_answer(user_answer)
+    normalized_user = normalize_answer(
+        user_answer
+    )
 
     accepted = [
         normalize_answer(answer)
@@ -394,6 +498,7 @@ def deterministic_check(question, user_answer):
     ]
 
     if normalized_user in accepted:
+
         return {
             "status": "correct",
             "is_correct": True,
@@ -412,20 +517,27 @@ def deterministic_check(question, user_answer):
 # =========================================================
 
 
-def analyze_with_ai(question, user_answer):
+def analyze_with_ai(
+    question,
+    user_answer,
+):
     """
-    登録された正解と一致しなかった答案だけをAIに分析させる。
+    登録された正解と一致しなかった答案だけを
+    AIに分析させる。
 
-    AIに問題生成や次問題選択をさせない。
+    AIには問題生成・次問題選択をさせない。
     """
 
-    objective = LEARNING_OBJECTIVES[question["objective"]]
+    objective = LEARNING_OBJECTIVES[
+        question["objective"]
+    ]
 
     prompt = f"""
 あなたは中学2年生向け英語教材の答案分析担当です。
 
 あなたの役割は「問題を作ること」ではありません。
-与えられた問題と学習目標に対して、生徒の答案を分析してください。
+与えられた問題と学習目標に対して、
+生徒の答案を分析してください。
 
 【学習目標】
 {objective["name"]}
@@ -457,7 +569,8 @@ def analyze_with_ai(question, user_answer):
 6. スペルミスだけで文全体を過度に不正解扱いしない。
 7. 生徒が中学2年生であることを考慮する。
 8. フィードバックは短く具体的にする。
-9. 「何ができているか」と「何を直せばよいか」が分かるようにする。
+9. 「何ができているか」と
+   「何を直せばよいか」が分かるようにする。
 10. 問題そのものを変更しない。
 11. 次の問題を提案しない。
 12. 学習履歴を推測しない。
@@ -473,21 +586,32 @@ def analyze_with_ai(question, user_answer):
         ),
     )
 
-    if getattr(response, "parsed", None) is not None:
+    if getattr(
+        response,
+        "parsed",
+        None,
+    ) is not None:
+
         parsed = response.parsed
 
-        if isinstance(parsed, dict):
+        if isinstance(
+            parsed,
+            dict,
+        ):
             return parsed
 
         try:
             return dict(parsed)
+
         except Exception:
             pass
 
     text = response.text
 
     if not text:
-        raise ValueError("Geminiから回答が返されませんでした。")
+        raise ValueError(
+            "Geminiから回答が返されませんでした。"
+        )
 
     return json.loads(text)
 
@@ -497,13 +621,16 @@ def analyze_with_ai(question, user_answer):
 # =========================================================
 
 
-def evaluate_answer(question, user_answer):
+def evaluate_answer(
+    question,
+    user_answer,
+):
     """
     回答を評価する。
 
-    1. まずコード側で登録正解を確認
+    1. コード側で登録正解を確認
     2. 一致しなければAI分析
-    3. AI結果を教育目標に沿って最終判定
+    3. 教育目標に沿って最終判定
     """
 
     deterministic_result = deterministic_check(
@@ -512,6 +639,7 @@ def evaluate_answer(question, user_answer):
     )
 
     if deterministic_result["is_correct"] is True:
+
         return {
             "is_correct": True,
             "judgement": "正解",
@@ -557,25 +685,27 @@ def evaluate_answer(question, user_answer):
         "回答を確認してください。",
     )
 
-    # -----------------------------------------------------
-    # 教育目標を満たしているかを優先する
-    # -----------------------------------------------------
-
     if question["require_target_pattern"]:
+
         is_correct = (
             grammatically_correct
             and meaning_matches
             and target_grammar_used
         )
+
     else:
+
         is_correct = (
             grammatically_correct
             and meaning_matches
         )
 
     if is_correct:
+
         judgement = "正解"
+
     else:
+
         judgement = "要復習"
 
     return {
@@ -592,7 +722,7 @@ def evaluate_answer(question, user_answer):
 
 
 # =========================================================
-# 学習履歴
+# 学習履歴レコード
 # =========================================================
 
 
@@ -620,12 +750,15 @@ def create_history_record(
         "judgement": result["judgement"],
         "mistake_type": result["mistake_type"],
         "feedback": result["feedback"],
-        "ai_used": result.get("ai_used", False),
+        "ai_used": result.get(
+            "ai_used",
+            False,
+        ),
     }
 
 
 # =========================================================
-# 学習項目別の成績
+# 学習項目別成績
 # =========================================================
 
 
@@ -633,12 +766,16 @@ def calculate_objective_stats():
     """
     学習目標ごとの成績を計算する。
 
-    AIに計算させない。
+    AIには計算させない。
     """
 
     stats = {}
 
-    for objective_id, objective in LEARNING_OBJECTIVES.items():
+    for (
+        objective_id,
+        objective,
+    ) in LEARNING_OBJECTIVES.items():
+
         stats[objective_id] = {
             "name": objective["name"],
             "total": 0,
@@ -647,23 +784,35 @@ def calculate_objective_stats():
         }
 
     for record in st.session_state.history:
-        objective_id = record["objective"]
+
+        objective_id = record.get(
+            "objective"
+        )
 
         if objective_id not in stats:
             continue
 
         stats[objective_id]["total"] += 1
 
-        if record["is_correct"]:
+        if record.get(
+            "is_correct",
+            False,
+        ):
+
             stats[objective_id]["correct"] += 1
 
     for objective_id in stats:
+
         total = stats[objective_id]["total"]
+
         correct = stats[objective_id]["correct"]
 
         if total > 0:
+
             stats[objective_id]["accuracy"] = (
-                correct / total * 100
+                correct
+                / total
+                * 100
             )
 
     return stats
@@ -674,21 +823,27 @@ def calculate_objective_stats():
 # =========================================================
 
 
-def get_recent_results(objective_id, count=3):
+def get_recent_results(
+    objective_id,
+    count=3,
+):
     """指定された学習目標の直近結果を取得する。"""
 
     records = [
         record
         for record in st.session_state.history
-        if record["objective"] == objective_id
+        if record.get("objective")
+        == objective_id
     ]
 
     return records[-count:]
 
 
-def get_streak(objective_id):
+def get_streak(
+    objective_id,
+):
     """
-    直近の連続正解 / 不正解を計算する。
+    直近の連続正解・連続不正解を計算する。
     """
 
     recent = get_recent_results(
@@ -697,23 +852,38 @@ def get_streak(objective_id):
     )
 
     if not recent:
+
         return {
             "type": None,
             "count": 0,
         }
 
-    last_value = recent[-1]["is_correct"]
+    last_value = recent[-1].get(
+        "is_correct",
+        False,
+    )
 
     count = 0
 
     for record in reversed(recent):
-        if record["is_correct"] == last_value:
+
+        if record.get(
+            "is_correct",
+            False,
+        ) == last_value:
+
             count += 1
+
         else:
+
             break
 
     return {
-        "type": "correct" if last_value else "incorrect",
+        "type": (
+            "correct"
+            if last_value
+            else "incorrect"
+        ),
         "count": count,
     }
 
@@ -722,15 +892,14 @@ def get_streak(objective_id):
 # 次の問題選択
 # =========================================================
 #
-# 重要：
-#
 # AIには次の問題を決めさせない。
 #
-# 学習履歴 → ルール → 問題バンク
+# 学習履歴
+#   ↓
+# ルール
+#   ↓
+# 問題バンク
 #
-# の順で決定する。
-#
-
 
 def select_next_question():
     """
@@ -739,25 +908,28 @@ def select_next_question():
 
     stats = calculate_objective_stats()
 
-    current_id = st.session_state.current_question_id
-
-    # -----------------------------------------------------
-    # 1. まず未学習の問題を優先
-    # -----------------------------------------------------
+    current_id = (
+        st.session_state.current_question_id
+    )
 
     attempted_ids = {
-        record["question_id"]
+        record.get("question_id")
         for record in st.session_state.history
     }
+
+    # -----------------------------------------------------
+    # 1. 未学習問題を優先
+    # -----------------------------------------------------
 
     unattempted = [
         question
         for question in QUESTION_BANK
-        if question["id"] not in attempted_ids
+        if question["id"]
+        not in attempted_ids
     ]
 
     if unattempted:
-        # 最初は難易度1を優先
+
         unattempted.sort(
             key=lambda q: (
                 q["difficulty"],
@@ -768,15 +940,22 @@ def select_next_question():
         return unattempted[0]
 
     # -----------------------------------------------------
-    # 2. 習熟度が最も低い学習目標を探す
+    # 2. 習熟度が最も低い学習目標
     # -----------------------------------------------------
 
     candidates = []
 
-    for objective_id, stat in stats.items():
+    for (
+        objective_id,
+        stat,
+    ) in stats.items():
+
         if stat["total"] == 0:
+
             score = 0
+
         else:
+
             score = stat["accuracy"]
 
         candidates.append(
@@ -797,16 +976,16 @@ def select_next_question():
     target_objective = candidates[0][2]
 
     # -----------------------------------------------------
-    # 3. その学習目標の問題を取得
+    # 3. 対象学習目標の問題
     # -----------------------------------------------------
 
     objective_questions = [
         question
         for question in QUESTION_BANK
-        if question["objective"] == target_objective
+        if question["objective"]
+        == target_objective
     ]
 
-    # 現在の問題と同じ問題はできるだけ避ける
     different_questions = [
         question
         for question in objective_questions
@@ -814,47 +993,56 @@ def select_next_question():
     ]
 
     if different_questions:
+
         objective_questions = different_questions
 
     # -----------------------------------------------------
-    # 4. 習熟度によって難易度を決める
+    # 4. 習熟度によって難易度を決定
     # -----------------------------------------------------
 
     stat = stats[target_objective]
 
     if stat["total"] == 0:
+
         target_difficulty = 1
 
     elif stat["accuracy"] < 60:
+
         target_difficulty = 1
 
     elif stat["accuracy"] < 80:
+
         target_difficulty = 1
 
     else:
+
         target_difficulty = 2
 
     suitable = [
         question
         for question in objective_questions
-        if question["difficulty"] == target_difficulty
+        if question["difficulty"]
+        == target_difficulty
     ]
 
     if not suitable:
+
         suitable = objective_questions
 
-    # -----------------------------------------------------
-    # 5. 同じ問題の繰り返しを避けながら選択
-    # -----------------------------------------------------
-
     if not suitable:
+
         return QUESTION_BANK[0]
 
-    # 履歴上、最も古く出題されたものを優先
+    # -----------------------------------------------------
+    # 5. 過去の出題順を利用して選択
+    # -----------------------------------------------------
+
     history_order = {
-        record["question_id"]: index
+        record.get("question_id"): index
         for index, record
-        in enumerate(st.session_state.history)
+        in enumerate(
+            st.session_state.history
+        )
     }
 
     suitable.sort(
@@ -868,7 +1056,7 @@ def select_next_question():
 
 
 # =========================================================
-# 履歴エクスポート
+# 学習履歴エクスポート
 # =========================================================
 
 
@@ -877,10 +1065,13 @@ def create_export_data():
 
     export_data = {
         "app_version": APP_VERSION,
+        "state_version": STATE_VERSION,
         "exported_at": datetime.now().isoformat(
             timespec="seconds"
         ),
-        "student_name": st.session_state.student_name,
+        "student_name": (
+            st.session_state.student_name
+        ),
         "history": st.session_state.history,
     }
 
@@ -892,15 +1083,15 @@ def create_export_data():
 
 
 # =========================================================
-# 履歴インポート
+# 学習履歴インポート
 # =========================================================
 
 
-def import_history(uploaded_file):
+def import_history(
+    uploaded_file,
+):
     """
     エクスポートしたJSONを読み込む。
-
-    不正な形式の場合はエラーにする。
     """
 
     raw = uploaded_file.read()
@@ -910,6 +1101,7 @@ def import_history(uploaded_file):
     )
 
     if "history" not in data:
+
         raise ValueError(
             "学習履歴データが見つかりません。"
         )
@@ -918,13 +1110,17 @@ def import_history(uploaded_file):
         data["history"],
         list,
     ):
+
         raise ValueError(
             "学習履歴の形式が正しくありません。"
         )
 
-    st.session_state.history = data["history"]
+    st.session_state.history = (
+        data["history"]
+    )
 
     if data.get("student_name"):
+
         st.session_state.student_name = (
             data["student_name"]
         )
@@ -954,7 +1150,9 @@ st.info(
 # =========================================================
 
 
-st.markdown("### 👤 学習者")
+st.markdown(
+    "### 👤 学習者"
+)
 
 student_name = st.text_input(
     "名前または識別用の名前",
@@ -978,7 +1176,9 @@ objective = LEARNING_OBJECTIVES[
 
 st.markdown("---")
 
-st.markdown("### 🎯 今回の学習目標")
+st.markdown(
+    "### 🎯 今回の学習目標"
+)
 
 st.write(
     f"**{objective['name']}**"
@@ -989,7 +1189,9 @@ st.caption(
 )
 
 
-st.markdown("### 📌 問題")
+st.markdown(
+    "### 📌 問題"
+)
 
 st.info(
     question["question"]
@@ -1001,7 +1203,9 @@ st.info(
 # =========================================================
 
 
-with st.form("answer_form"):
+with st.form(
+    "answer_form"
+):
 
     user_answer = st.text_input(
         "あなたの解答",
@@ -1040,21 +1244,29 @@ if submit_button:
                     user_answer,
                 )
 
-                history_record = create_history_record(
-                    question,
-                    user_answer,
-                    result,
+                history_record = (
+                    create_history_record(
+                        question,
+                        user_answer,
+                        result,
+                    )
                 )
 
                 st.session_state.history.append(
                     history_record
                 )
 
-                st.session_state.last_result = result
+                st.session_state.last_result = (
+                    result
+                )
 
-                st.session_state.feedback = result
+                st.session_state.feedback = (
+                    result
+                )
 
-                st.session_state.next_ready = True
+                st.session_state.next_ready = (
+                    True
+                )
 
                 st.rerun()
 
@@ -1075,17 +1287,34 @@ if submit_button:
 
 
 # =========================================================
-# フィードバック
+# フィードバック表示
 # =========================================================
+#
+# 旧バージョンの文字列が残っていても、
+# dictでなければここには入らない。
+#
+
+feedback_data = st.session_state.get(
+    "feedback"
+)
 
 
-if st.session_state.feedback:
+if (
+    isinstance(
+        feedback_data,
+        dict,
+    )
+    and "is_correct" in feedback_data
+):
 
-    result = st.session_state.feedback
+    result = feedback_data
 
     st.markdown("---")
 
-    if result["is_correct"]:
+    if result.get(
+        "is_correct",
+        False,
+    ):
 
         st.success(
             "🟢 正解です。"
@@ -1097,15 +1326,25 @@ if st.session_state.feedback:
             "🔴 今回の学習目標では要復習です。"
         )
 
-    st.markdown("### 🔍 フィードバック")
-
-    st.write(
-        result["feedback"]
+    st.markdown(
+        "### 🔍 フィードバック"
     )
 
-    if not result["is_correct"]:
+    st.write(
+        result.get(
+            "feedback",
+            "フィードバックがありません。",
+        )
+    )
 
-        st.markdown("### 📖 模範解答")
+    if not result.get(
+        "is_correct",
+        False,
+    ):
+
+        st.markdown(
+            "### 📖 模範解答"
+        )
 
         st.code(
             question["model_answer"]
@@ -1115,7 +1354,10 @@ if st.session_state.feedback:
             question["explanation"]
         )
 
-    if result.get("ai_used"):
+    if result.get(
+        "ai_used",
+        False,
+    ):
 
         st.caption(
             "この回答はAIによる答案分析を使用しています。"
@@ -1133,7 +1375,10 @@ if st.session_state.feedback:
 # =========================================================
 
 
-if st.session_state.next_ready:
+if st.session_state.get(
+    "next_ready",
+    False,
+):
 
     st.markdown("---")
 
@@ -1142,7 +1387,9 @@ if st.session_state.next_ready:
         type="primary",
     ):
 
-        next_question = select_next_question()
+        next_question = (
+            select_next_question()
+        )
 
         st.session_state.current_question_id = (
             next_question["id"]
@@ -1178,8 +1425,12 @@ if st.session_state.history:
 
     total_correct = sum(
         1
-        for record in st.session_state.history
-        if record["is_correct"]
+        for record
+        in st.session_state.history
+        if record.get(
+            "is_correct",
+            False,
+        )
     )
 
     overall_accuracy = (
@@ -1222,7 +1473,10 @@ if st.session_state.history:
         "### 🎯 学習目標別の習熟状況"
     )
 
-    for objective_id, stat in stats.items():
+    for (
+        objective_id,
+        stat,
+    ) in stats.items():
 
         if stat["total"] == 0:
 
@@ -1234,7 +1488,8 @@ if st.session_state.history:
 
         st.write(
             f"**{stat['name']}**："
-            f"{stat['correct']}/{stat['total']}問"
+            f"{stat['correct']}/"
+            f"{stat['total']}問"
             f"（{stat['accuracy']:.1f}%）"
         )
 
@@ -1254,7 +1509,11 @@ if st.session_state.history:
 
     for record in st.session_state.history:
 
-        if record["is_correct"]:
+        if record.get(
+            "is_correct",
+            False,
+        ):
+
             continue
 
         mistake = record.get(
@@ -1282,7 +1541,10 @@ if st.session_state.history:
             reverse=True,
         )
 
-        for mistake, count in sorted_mistakes:
+        for (
+            mistake,
+            count,
+        ) in sorted_mistakes:
 
             st.write(
                 f"- `{mistake}`：{count}問"
@@ -1290,66 +1552,80 @@ if st.session_state.history:
 
 
     # -----------------------------------------------------
-    # 履歴
+    # 詳細履歴
     # -----------------------------------------------------
 
     with st.expander(
         "📝 詳細な学習履歴"
     ):
 
-        for index, record in enumerate(
+        for (
+            index,
+            record,
+        ) in enumerate(
             reversed(
                 st.session_state.history
             ),
             1,
         ):
 
+            question_number = (
+                len(
+                    st.session_state.history
+                )
+                - index
+                + 1
+            )
+
             status = (
                 "🟢 正解"
-                if record["is_correct"]
+                if record.get(
+                    "is_correct",
+                    False,
+                )
                 else "🔴 要復習"
             )
 
             st.markdown(
-                f"**第{len(st.session_state.history) - index + 1}問** "
+                f"**第{question_number}問** "
                 f"{status}"
             )
 
             st.caption(
                 f"学習項目："
-                f"{record['objective_name']}"
+                f"{record.get('objective_name', '')}"
             )
 
             st.text(
                 f"問題：\n"
-                f"{record['question']}"
+                f"{record.get('question', '')}"
             )
 
             st.text(
                 f"あなたの回答：\n"
-                f"{record['user_answer']}"
+                f"{record.get('user_answer', '')}"
             )
 
             st.text(
                 f"模範解答：\n"
-                f"{record['model_answer']}"
+                f"{record.get('model_answer', '')}"
             )
 
             st.caption(
                 f"誤答タイプ："
-                f"{record['mistake_type']}"
+                f"{record.get('mistake_type', 'other')}"
             )
 
             st.caption(
                 f"フィードバック："
-                f"{record['feedback']}"
+                f"{record.get('feedback', '')}"
             )
 
             st.markdown("---")
 
 
 # =========================================================
-# データ保存・復元
+# 学習データ
 # =========================================================
 
 
@@ -1364,9 +1640,9 @@ st.caption(
 )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # エクスポート
-# ---------------------------------------------------------
+# =========================================================
 
 
 if st.session_state.history:
@@ -1381,15 +1657,16 @@ if st.session_state.history:
     )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # インポート
-# ---------------------------------------------------------
+# =========================================================
 
 
 uploaded_file = st.file_uploader(
     "保存した学習履歴を復元",
     type=["json"],
 )
+
 
 if uploaded_file is not None:
 
@@ -1435,6 +1712,11 @@ with st.expander(
     )
 
     st.write(
+        f"セッション状態バージョン："
+        f"{STATE_VERSION}"
+    )
+
+    st.write(
         f"使用モデル：{MODEL_NAME}"
     )
 
@@ -1443,7 +1725,8 @@ with st.expander(
     )
 
     st.write(
-        f"学習目標数：{len(LEARNING_OBJECTIVES)}"
+        f"学習目標数："
+        f"{len(LEARNING_OBJECTIVES)}"
     )
 
     st.write(
@@ -1459,5 +1742,6 @@ with st.expander(
     )
 
     st.write(
-        "学習履歴：Streamlitセッション＋JSONエクスポート"
+        "学習履歴："
+        "Streamlitセッション＋JSONエクスポート"
     )
