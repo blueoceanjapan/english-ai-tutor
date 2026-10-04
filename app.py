@@ -14,9 +14,8 @@ st.set_page_config(
     layout="centered",
 )
 
-
-APP_VERSION = "1.1.0"
-STATE_VERSION = 3
+APP_VERSION = "1.2.0"
+STATE_VERSION = 4
 
 
 # =========================================================
@@ -25,16 +24,24 @@ STATE_VERSION = 3
 #
 # 第1段階では、
 #
-# ・問題形式：空欄補充
-# ・AIによる問題生成：使用しない
-# ・AIによる採点：使用しない
-# ・正誤判定：Pythonで行う
+# 「空欄補充 × 4択」
 #
-# とする。
+# に限定する。
 #
-# まずは「簡単な問題から始める」という
-# 教育設計そのものを検証する。
+# 生徒は、
 #
+#   ア
+#   イ
+#   ウ
+#   エ
+#
+# の記号で回答する。
+#
+# 選択肢そのものを入力した場合も受け付ける。
+#
+# AIは現段階では使用しない。
+#
+# =========================================================
 
 
 LEARNING_OBJECTIVES = {
@@ -69,22 +76,8 @@ LEARNING_OBJECTIVES = {
 
 
 # =========================================================
-# 選択肢の記号
+# 選択肢記号
 # =========================================================
-#
-# 今後、選択問題を追加するときは必ず
-# ア・イ・ウ・エを使用する。
-#
-# 生徒は、
-#
-# ・「ア」
-# ・「イ」
-# ・「ウ」
-# ・「エ」
-#
-# の記号だけで回答してもよい。
-#
-
 
 CHOICE_LABELS = [
     "ア",
@@ -98,20 +91,15 @@ CHOICE_LABELS = [
 # 問題バンク
 # =========================================================
 #
-# question_type:
+# すべて「空欄補充 × 4択」。
 #
-#   fill_blank
-#       → 空欄補充
+# answer:
+#   正解の記号
 #
-#   choice
-#       → 選択問題
+# options:
+#   ア・イ・ウ・エの4択
 #
-# 第1段階では fill_blank のみ使用する。
-#
-# 将来的に choice を追加する場合、
-# options は必ず4択までとし、
-# ア・イ・ウ・エを付ける。
-#
+# =========================================================
 
 
 QUESTION_BANK = [
@@ -122,19 +110,34 @@ QUESTION_BANK = [
 
     {
         "id": "basic_001",
-        "question_type": "fill_blank",
+        "question_type": "fill_blank_choice",
         "objective": "gerund_basic",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "______ is fun."
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "（　　　）is fun."
         ),
         "japanese": "「泳ぐことは楽しいです。」",
-        "answer": "Swimming",
-        "accepted_answers": [
-            "Swimming",
-            "swimming",
+        "options": [
+            {
+                "label": "ア",
+                "value": "Swim",
+            },
+            {
+                "label": "イ",
+                "value": "Swimming",
+            },
+            {
+                "label": "ウ",
+                "value": "Swims",
+            },
+            {
+                "label": "エ",
+                "value": "Swam",
+            },
         ],
+        "answer": "イ",
         "explanation": (
             "「泳ぐこと」を表す動名詞は "
             "swim に -ing を付けた Swimming です。"
@@ -143,25 +146,38 @@ QUESTION_BANK = [
 
     {
         "id": "basic_002",
-        "question_type": "fill_blank",
+        "question_type": "fill_blank_choice",
         "objective": "gerund_basic",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "I enjoy ______."
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "My hobby is（　　　）pictures."
         ),
-        "japanese": "「私は泳ぐことを楽しんでいます。」",
-        "answer": "swimming",
-        "accepted_answers": [
-            "swimming",
-            "Swimming",
+        "japanese": "「私の趣味は絵を描くことです。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "draw",
+            },
+            {
+                "label": "イ",
+                "value": "drew",
+            },
+            {
+                "label": "ウ",
+                "value": "drawing",
+            },
+            {
+                "label": "エ",
+                "value": "draws",
+            },
         ],
+        "answer": "ウ",
         "explanation": (
-            "enjoy の後ろでは、今回の学習目標として "
-            "動名詞 swimming を使います。"
+            "「絵を描くこと」は動名詞 drawing で表します。"
         ),
     },
-
 
     # -----------------------------------------------------
     # like + 動名詞
@@ -169,196 +185,13 @@ QUESTION_BANK = [
 
     {
         "id": "like_001",
-        "question_type": "fill_blank",
+        "question_type": "fill_blank_choice",
         "objective": "like_gerund",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "I like ______ tennis."
-        ),
-        "japanese": "「私はテニスをすることが好きです。」",
-        "answer": "playing",
-        "accepted_answers": [
-            "playing",
-        ],
-        "explanation": (
-            "like の後ろに動名詞を使うので、"
-            "play → playing となります。"
-        ),
-    },
-
-    {
-        "id": "like_002",
-        "question_type": "fill_blank",
-        "objective": "like_gerund",
-        "difficulty": 1,
-        "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "I like ______ to music."
-        ),
-        "japanese": "「私は音楽を聴くことが好きです。」",
-        "answer": "listening",
-        "accepted_answers": [
-            "listening",
-        ],
-        "explanation": (
-            "like の後ろに動名詞を使うので、"
-            "listen → listening となります。"
-        ),
-    },
-
-    {
-        "id": "like_003",
-        "question_type": "fill_blank",
-        "objective": "like_gerund",
-        "difficulty": 2,
-        "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "She likes ______ books."
-        ),
-        "japanese": "「彼女は本を読むことが好きです。」",
-        "answer": "reading",
-        "accepted_answers": [
-            "reading",
-        ],
-        "explanation": (
-            "read に -ing を付けて reading とします。"
-            "また、主語が She なので like は likes になっています。"
-        ),
-    },
-
-
-    # -----------------------------------------------------
-    # enjoy + 動名詞
-    # -----------------------------------------------------
-
-    {
-        "id": "enjoy_001",
-        "question_type": "fill_blank",
-        "objective": "enjoy_gerund",
-        "difficulty": 1,
-        "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "I enjoy ______ English."
-        ),
-        "japanese": "「私は英語を勉強することを楽しんでいます。」",
-        "answer": "studying",
-        "accepted_answers": [
-            "studying",
-        ],
-        "explanation": (
-            "enjoy の後ろに動名詞を使うので、"
-            "study → studying となります。"
-        ),
-    },
-
-    {
-        "id": "enjoy_002",
-        "question_type": "fill_blank",
-        "objective": "enjoy_gerund",
-        "difficulty": 1,
-        "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "I enjoy ______."
-        ),
-        "japanese": "「私は料理をすることを楽しんでいます。」",
-        "answer": "cooking",
-        "accepted_answers": [
-            "cooking",
-        ],
-        "explanation": (
-            "cook に -ing を付けて cooking とします。"
-        ),
-    },
-
-    {
-        "id": "enjoy_003",
-        "question_type": "fill_blank",
-        "objective": "enjoy_gerund",
-        "difficulty": 2,
-        "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "He enjoys ______ soccer."
-        ),
-        "japanese": "「彼はサッカーをすることを楽しんでいます。」",
-        "answer": "playing",
-        "accepted_answers": [
-            "playing",
-        ],
-        "explanation": (
-            "play に -ing を付けて playing とします。"
-        ),
-    },
-
-
-    # -----------------------------------------------------
-    # finish + 動名詞
-    # -----------------------------------------------------
-
-    {
-        "id": "finish_001",
-        "question_type": "fill_blank",
-        "objective": "finish_gerund",
-        "difficulty": 1,
-        "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "I finished ______ my homework."
-        ),
-        "japanese": "「私は宿題を終えました。」",
-        "answer": "doing",
-        "accepted_answers": [
-            "doing",
-        ],
-        "explanation": (
-            "finish の後ろに動名詞を使うので、"
-            "do → doing となります。"
-        ),
-    },
-
-    {
-        "id": "finish_002",
-        "question_type": "fill_blank",
-        "objective": "finish_gerund",
-        "difficulty": 1,
-        "question": (
-            "次の英文の空欄に入る適切な語を書きなさい。\n\n"
-            "She finished ______ lunch."
-        ),
-        "japanese": "「彼女は昼食を食べ終えました。」",
-        "answer": "eating",
-        "accepted_answers": [
-            "eating",
-        ],
-        "explanation": (
-            "finish の後ろに動名詞を使うので、"
-            "eat → eating となります。"
-        ),
-    },
-
-
-    # =====================================================
-    # 将来の選択問題のサンプル
-    # =====================================================
-    #
-    # 現在は試験対象外。
-    #
-    # choice 形式では、必ず
-    # ア・イ・ウ・エ
-    # の記号を付ける。
-    #
-    # 生徒は「ア」だけを入力しても正解になる。
-    #
-    # =====================================================
-
-    {
-        "id": "choice_sample_001",
-        "question_type": "choice",
-        "objective": "like_gerund",
-        "difficulty": 1,
-        "enabled": False,
-        "question": (
-            "次の空欄に入る最も適切な語を選びなさい。\n\n"
-            "I like ______ tennis."
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "I like（　　　）tennis."
         ),
         "japanese": "「私はテニスをすることが好きです。」",
         "options": [
@@ -380,40 +213,266 @@ QUESTION_BANK = [
             },
         ],
         "answer": "ア",
-        "accepted_answers": [
-            "ア",
-            "a",
-            "A",
-            "playing",
-        ],
         "explanation": (
-            "like の後ろに動名詞 playing を使います。"
+            "今回の学習目標では、like の後ろに "
+            "動名詞 playing を使います。"
+        ),
+    },
+
+    {
+        "id": "like_002",
+        "question_type": "fill_blank_choice",
+        "objective": "like_gerund",
+        "difficulty": 1,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "I like（　　　）to music."
+        ),
+        "japanese": "「私は音楽を聴くことが好きです。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "listen",
+            },
+            {
+                "label": "イ",
+                "value": "listening",
+            },
+            {
+                "label": "ウ",
+                "value": "listened",
+            },
+            {
+                "label": "エ",
+                "value": "listens",
+            },
+        ],
+        "answer": "イ",
+        "explanation": (
+            "like の後ろに動名詞を使うので、"
+            "listen → listening となります。"
+        ),
+    },
+
+    {
+        "id": "like_003",
+        "question_type": "fill_blank_choice",
+        "objective": "like_gerund",
+        "difficulty": 2,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "She likes（　　　）books."
+        ),
+        "japanese": "「彼女は本を読むことが好きです。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "read",
+            },
+            {
+                "label": "イ",
+                "value": "reads",
+            },
+            {
+                "label": "ウ",
+                "value": "reading",
+            },
+            {
+                "label": "エ",
+                "value": "readed",
+            },
+        ],
+        "answer": "ウ",
+        "explanation": (
+            "like の後ろに動名詞 reading を使います。"
+        ),
+    },
+
+    # -----------------------------------------------------
+    # enjoy + 動名詞
+    # -----------------------------------------------------
+
+    {
+        "id": "enjoy_001",
+        "question_type": "fill_blank_choice",
+        "objective": "enjoy_gerund",
+        "difficulty": 1,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "I enjoy（　　　）English."
+        ),
+        "japanese": "「私は英語を勉強することを楽しんでいます。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "study",
+            },
+            {
+                "label": "イ",
+                "value": "studying",
+            },
+            {
+                "label": "ウ",
+                "value": "studied",
+            },
+            {
+                "label": "エ",
+                "value": "studies",
+            },
+        ],
+        "answer": "イ",
+        "explanation": (
+            "enjoy の後ろに動名詞 studying を使います。"
+        ),
+    },
+
+    {
+        "id": "enjoy_002",
+        "question_type": "fill_blank_choice",
+        "objective": "enjoy_gerund",
+        "difficulty": 1,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "I enjoy（　　　）."
+        ),
+        "japanese": "「私は料理をすることを楽しんでいます。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "cook",
+            },
+            {
+                "label": "イ",
+                "value": "cooked",
+            },
+            {
+                "label": "ウ",
+                "value": "cooks",
+            },
+            {
+                "label": "エ",
+                "value": "cooking",
+            },
+        ],
+        "answer": "エ",
+        "explanation": (
+            "enjoy の後ろに動名詞 cooking を使います。"
+        ),
+    },
+
+    {
+        "id": "enjoy_003",
+        "question_type": "fill_blank_choice",
+        "objective": "enjoy_gerund",
+        "difficulty": 2,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "He enjoys（　　　）soccer."
+        ),
+        "japanese": "「彼はサッカーをすることを楽しんでいます。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "play",
+            },
+            {
+                "label": "イ",
+                "value": "playing",
+            },
+            {
+                "label": "ウ",
+                "value": "played",
+            },
+            {
+                "label": "エ",
+                "value": "plays",
+            },
+        ],
+        "answer": "イ",
+        "explanation": (
+            "enjoys の後ろに動名詞 playing を使います。"
+        ),
+    },
+
+    # -----------------------------------------------------
+    # finish + 動名詞
+    # -----------------------------------------------------
+
+    {
+        "id": "finish_001",
+        "question_type": "fill_blank_choice",
+        "objective": "finish_gerund",
+        "difficulty": 1,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "I finished（　　　）my homework."
+        ),
+        "japanese": "「私は宿題を終えました。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "do",
+            },
+            {
+                "label": "イ",
+                "value": "doing",
+            },
+            {
+                "label": "ウ",
+                "value": "did",
+            },
+            {
+                "label": "エ",
+                "value": "does",
+            },
+        ],
+        "answer": "イ",
+        "explanation": (
+            "finish の後ろに動名詞 doing を使います。"
+        ),
+    },
+
+    {
+        "id": "finish_002",
+        "question_type": "fill_blank_choice",
+        "objective": "finish_gerund",
+        "difficulty": 1,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。"
+            "\n\n"
+            "She finished（　　　）lunch."
+        ),
+        "japanese": "「彼女は昼食を食べ終えました。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "eat",
+            },
+            {
+                "label": "イ",
+                "value": "eats",
+            },
+            {
+                "label": "ウ",
+                "value": "eating",
+            },
+            {
+                "label": "エ",
+                "value": "ate",
+            },
+        ],
+        "answer": "ウ",
+        "explanation": (
+            "finish の後ろに動名詞 eating を使います。"
         ),
     },
 ]
-
-
-# =========================================================
-# 有効な問題だけを取得
-# =========================================================
-
-
-def get_enabled_questions():
-    """
-    現在の試験で使用する問題だけを取得する。
-
-    enabled が指定されていない問題は有効とする。
-    enabled=False の問題は除外する。
-    """
-
-    return [
-        question
-        for question in QUESTION_BANK
-        if question.get(
-            "enabled",
-            True,
-        )
-    ]
 
 
 # =========================================================
@@ -425,16 +484,8 @@ def get_question(question_id):
     """問題IDから問題を取得する。"""
 
     for question in QUESTION_BANK:
-
         if question["id"] == question_id:
-
             return question
-
-    enabled_questions = get_enabled_questions()
-
-    if enabled_questions:
-
-        return enabled_questions[0]
 
     return QUESTION_BANK[0]
 
@@ -452,58 +503,49 @@ def get_current_question():
 
 def normalize_answer(text):
     """
-    回答比較用の最低限の正規化。
+    回答比較用の正規化。
 
-    ・前後の空白を削除
-    ・連続した空白を1つにする
-    ・大文字・小文字を統一
-    ・全角・半角の大きな差をできるだけ吸収
+    「ア」「ア。」「ア．」などを
+    同じ回答として扱えるようにする。
     """
+
+    if text is None:
+        return ""
 
     text = str(text).strip()
 
-    text = " ".join(
-        text.split()
+    text = text.replace(
+        "　",
+        " ",
     )
 
     text = text.lower()
 
-    return text
+    # 選択記号の後ろについた句読点を除去
+    text = text.rstrip(
+        "。．.、,）)"
+    )
+
+    return text.strip()
 
 
 # =========================================================
-# 選択肢の表示用
+# 選択肢取得
 # =========================================================
 
 
-def format_choices(question):
-    """
-    選択問題の選択肢を表示用文字列にする。
+def get_option_by_label(
+    question,
+    label,
+):
+    """記号から選択肢を取得する。"""
 
-    必ず
-    ア．
-    イ．
-    ウ．
-    エ．
-    の形式にする。
-    """
+    for option in question["options"]:
 
-    lines = []
+        if option["label"] == label:
+            return option
 
-    for option in question.get(
-        "options",
-        [],
-    ):
-
-        label = option["label"]
-
-        value = option["value"]
-
-        lines.append(
-            f"{label}．{value}"
-        )
-
-    return "\n".join(lines)
+    return None
 
 
 # =========================================================
@@ -516,127 +558,92 @@ def check_answer(
     user_answer,
 ):
     """
-    問題形式に応じて回答を判定する。
+    4択問題を判定する。
 
-    fill_blank:
-        入力された語を正解と比較。
+    例：
 
-    choice:
-        ア・イ・ウ・エの記号、
-        または選択肢の内容そのものを受け付ける。
+        ア
+        イ
+        ウ
+        エ
+
+    の記号で回答可能。
+
+    選択肢そのものを入力した場合も受け付ける。
     """
-
-    question_type = question[
-        "question_type"
-    ]
 
     normalized_user = normalize_answer(
         user_answer
     )
 
-    # -----------------------------------------------------
-    # 空欄補充
-    # -----------------------------------------------------
-
-    if question_type == "fill_blank":
-
-        accepted_answers = [
-            normalize_answer(answer)
-            for answer
-            in question.get(
-                "accepted_answers",
-                [],
-            )
-        ]
-
-        is_correct = (
-            normalized_user
-            in accepted_answers
-        )
-
-        if is_correct:
-
-            return {
-                "is_correct": True,
-                "judgement": "正解",
-                "feedback": (
-                    "正解です。"
-                    "\n\n"
-                    + question["explanation"]
-                ),
-                "mistake_type": "none",
-            }
-
-        return {
-            "is_correct": False,
-            "judgement": "要復習",
-            "feedback": (
-                "今回は正解ではありません。"
-                "\n\n"
-                + question["explanation"]
-            ),
-            "mistake_type": "answer_error",
-        }
-
-    # -----------------------------------------------------
-    # 選択問題
-    # -----------------------------------------------------
-
-    if question_type == "choice":
-
-        correct_label = normalize_answer(
-            question["answer"]
-        )
-
-        accepted_answers = [
-            normalize_answer(answer)
-            for answer
-            in question.get(
-                "accepted_answers",
-                [],
-            )
-        ]
-
-        # 記号でも選択肢そのものでも回答可能
-        if (
-            normalized_user
-            in accepted_answers
-        ):
-
-            return {
-                "is_correct": True,
-                "judgement": "正解",
-                "feedback": (
-                    "正解です。"
-                    "\n\n"
-                    + question["explanation"]
-                ),
-                "mistake_type": "none",
-            }
-
-        return {
-            "is_correct": False,
-            "judgement": "要復習",
-            "feedback": (
-                "今回は正解ではありません。"
-                "\n\n"
-                + question["explanation"]
-            ),
-            "mistake_type": "answer_error",
-        }
-
-    # -----------------------------------------------------
-    # 未対応の問題形式
-    # -----------------------------------------------------
-
-    raise ValueError(
-        f"未対応の問題形式です："
-        f"{question_type}"
+    correct_label = normalize_answer(
+        question["answer"]
     )
+
+    correct_option = get_option_by_label(
+        question,
+        question["answer"],
+    )
+
+    if correct_option is None:
+
+        raise ValueError(
+            "正解の選択肢が問題データにありません。"
+        )
+
+    correct_value = normalize_answer(
+        correct_option["value"]
+    )
+
+    # -----------------------------------------------------
+    # 記号で回答
+    # -----------------------------------------------------
+
+    if normalized_user == correct_label:
+
+        return {
+            "is_correct": True,
+            "judgement": "正解",
+            "mistake_type": "none",
+            "feedback": (
+                "正解です。\n\n"
+                + question["explanation"]
+            ),
+        }
+
+    # -----------------------------------------------------
+    # 選択肢そのもので回答
+    # -----------------------------------------------------
+
+    if normalized_user == correct_value:
+
+        return {
+            "is_correct": True,
+            "judgement": "正解",
+            "mistake_type": "none",
+            "feedback": (
+                "正解です。\n\n"
+                + question["explanation"]
+            ),
+        }
+
+    # -----------------------------------------------------
+    # 不正解
+    # -----------------------------------------------------
+
+    return {
+        "is_correct": False,
+        "judgement": "要復習",
+        "mistake_type": "answer_error",
+        "feedback": (
+            "今回は正解ではありません。\n\n"
+            + question["explanation"]
+        ),
+    }
 
 
 # =========================================================
-# 学習履歴レコード
+# 学習履歴
 # =========================================================
 
 
@@ -654,6 +661,11 @@ def create_history_record(
     objective = LEARNING_OBJECTIVES[
         objective_id
     ]
+
+    correct_option = get_option_by_label(
+        question,
+        question["answer"],
+    )
 
     return {
         "timestamp": datetime.now().isoformat(
@@ -679,16 +691,12 @@ def create_history_record(
         ),
         "user_answer": user_answer,
         "correct_answer": (
-            question.get(
-                "answer",
-                "",
-            )
-            if question["question_type"]
-            == "choice"
-            else question.get(
-                "answer",
-                "",
-            )
+            question["answer"]
+        ),
+        "correct_value": (
+            correct_option["value"]
+            if correct_option
+            else ""
         ),
         "is_correct": result[
             "is_correct"
@@ -711,9 +719,7 @@ def create_history_record(
 
 
 def calculate_objective_stats():
-    """
-    学習目標ごとの成績を計算する。
-    """
+    """学習目標ごとの成績を計算する。"""
 
     stats = {}
 
@@ -723,24 +729,19 @@ def calculate_objective_stats():
     ) in LEARNING_OBJECTIVES.items():
 
         stats[objective_id] = {
-            "name": objective[
-                "name"
-            ],
+            "name": objective["name"],
             "total": 0,
             "correct": 0,
             "accuracy": 0.0,
         }
 
-    for record in (
-        st.session_state.history
-    ):
+    for record in st.session_state.history:
 
         objective_id = record.get(
             "objective"
         )
 
         if objective_id not in stats:
-
             continue
 
         stats[
@@ -780,26 +781,16 @@ def calculate_objective_stats():
 
 
 # =========================================================
-# 次の問題を選択
+# 次の問題
 # =========================================================
 #
-# 第1段階では、AIによる適応判断をしない。
+# 現段階では複雑な適応学習を入れず、
+# 未回答の問題を順番に出す。
 #
-# まず未学習の問題を順番に出す。
-#
-# 問題形式・難易度・学習項目の
-# 適応ロジックは今後の試験結果を見て改善する。
-#
+# =========================================================
 
 
 def select_next_question():
-    """
-    次の問題をルールベースで選択する。
-    """
-
-    enabled_questions = (
-        get_enabled_questions()
-    )
 
     attempted_ids = {
         record.get(
@@ -809,45 +800,15 @@ def select_next_question():
         in st.session_state.history
     }
 
-    # -----------------------------------------------------
-    # 未回答の問題を優先
-    # -----------------------------------------------------
+    # 未回答問題を探す
+    for question in QUESTION_BANK:
 
-    unattempted = [
-        question
-        for question
-        in enabled_questions
-        if question["id"]
-        not in attempted_ids
-    ]
+        if question["id"] not in attempted_ids:
 
-    if unattempted:
+            return question
 
-        # 難易度の低いものから
-        unattempted.sort(
-            key=lambda question: (
-                question[
-                    "difficulty"
-                ],
-                question["id"],
-            )
-        )
-
-        return unattempted[0]
-
-    # -----------------------------------------------------
-    # 全問終了後
-    # -----------------------------------------------------
-    #
-    # 現段階では最初の問題に戻る。
-    #
-    # 今後、
-    # 「間違えた問題を再出題」
-    # 「弱点項目を優先」
-    # などに発展させる。
-    #
-
-    return enabled_questions[0]
+    # 全問終了したら最初に戻る
+    return QUESTION_BANK[0]
 
 
 # =========================================================
@@ -856,7 +817,6 @@ def select_next_question():
 
 
 def create_export_data():
-    """学習履歴をJSON形式にする。"""
 
     export_data = {
         "app_version": APP_VERSION,
@@ -887,7 +847,6 @@ def create_export_data():
 def import_history(
     uploaded_file,
 ):
-    """保存済みJSONを読み込む。"""
 
     raw = uploaded_file.read()
 
@@ -929,19 +888,16 @@ def import_history(
 
 
 def initialize_state():
-    """
-    セッション状態を初期化する。
-
-    バージョンが変わった場合、
-    古い問題形式との混在を避けるため、
-    現在の一時状態をリセットする。
-    """
 
     current_version = (
         st.session_state.get(
             "state_version"
         )
     )
+
+    # -----------------------------------------------------
+    # 新バージョン
+    # -----------------------------------------------------
 
     if current_version != STATE_VERSION:
 
@@ -950,7 +906,7 @@ def initialize_state():
         )
 
         st.session_state.current_question_id = (
-            "basic_001"
+            QUESTION_BANK[0]["id"]
         )
 
         st.session_state.history = []
@@ -961,6 +917,10 @@ def initialize_state():
 
         st.session_state.last_result = None
 
+    # -----------------------------------------------------
+    # 通常起動
+    # -----------------------------------------------------
+
     else:
 
         if (
@@ -969,7 +929,7 @@ def initialize_state():
         ):
 
             st.session_state.current_question_id = (
-                "basic_001"
+                QUESTION_BANK[0]["id"]
             )
 
         if (
@@ -1021,13 +981,13 @@ st.title(
 )
 
 st.caption(
-    "第1段階：動名詞・空欄補充"
+    "第1段階：動名詞・空欄補充4択"
 )
 
 st.info(
-    "現在は、まず基礎的な空欄補充問題で"
-    "学習の流れを検証しています。"
-    "選択問題・語句整序・英作文は今後段階的に追加します。"
+    "この試験版では、まず空欄補充の4択問題で"
+    "基礎を確認します。"
+    "答えは「ア・イ・ウ・エ」の記号で入力できます。"
 )
 
 
@@ -1094,44 +1054,39 @@ st.markdown(
     "### 📌 問題"
 )
 
-
-# 問題形式表示
-if question["question_type"] == "fill_blank":
-
-    st.caption(
-        "問題形式：空欄補充"
-    )
-
-elif question["question_type"] == "choice":
-
-    st.caption(
-        "問題形式：選択問題"
-    )
-
+st.caption(
+    "問題形式：空欄補充・4択"
+)
 
 st.info(
     question["question"]
 )
 
 
-# 日本語訳を学習者に見せるかどうかは
-# 今後の教育設計で検討する。
-#
-# 現段階では、問題理解のために表示する。
-#
+# =========================================================
+# 選択肢
+# =========================================================
 
-if question.get(
-    "japanese"
-):
 
-    st.caption(
-        f"日本語："
-        f"{question['japanese']}"
+st.markdown(
+    "#### 選択肢"
+)
+
+for option in question["options"]:
+
+    st.write(
+        f"**{option['label']}．** "
+        f"{option['value']}"
     )
 
 
+st.caption(
+    "答えは「ア・イ・ウ・エ」の記号で入力してください。"
+)
+
+
 # =========================================================
-# 回答入力
+# 回答
 # =========================================================
 
 
@@ -1139,56 +1094,10 @@ with st.form(
     "answer_form"
 ):
 
-    # -----------------------------------------------------
-    # 空欄補充
-    # -----------------------------------------------------
-
-    if question[
-        "question_type"
-    ] == "fill_blank":
-
-        user_answer = st.text_input(
-            "空欄に入る語を入力してください",
-            placeholder="英語を入力してください",
-        )
-
-    # -----------------------------------------------------
-    # 選択問題
-    # -----------------------------------------------------
-
-    elif question[
-        "question_type"
-    ] == "choice":
-
-        st.markdown(
-            "#### 選択肢"
-        )
-
-        st.markdown(
-            format_choices(
-                question
-            )
-        )
-
-        user_answer = st.text_input(
-            "答えを入力してください",
-            placeholder=(
-                "例：ア"
-            ),
-        )
-
-        st.caption(
-            "選択肢の記号（ア・イ・ウ・エ）"
-            "で答えても構いません。"
-        )
-
-    else:
-
-        st.error(
-            "未対応の問題形式です。"
-        )
-
-        user_answer = ""
+    user_answer = st.text_input(
+        "あなたの答え",
+        placeholder="例：イ",
+    )
 
     submit_button = (
         st.form_submit_button(
@@ -1208,7 +1117,7 @@ if submit_button:
     if not user_answer.strip():
 
         st.warning(
-            "回答を入力してください。"
+            "答えを入力してください。"
         )
 
     else:
@@ -1299,7 +1208,7 @@ if (
     else:
 
         st.error(
-            "🔴 もう一度確認しましょう。"
+            "🔴 不正解です。"
         )
 
     st.markdown(
@@ -1313,21 +1222,32 @@ if (
         )
     )
 
+    # -----------------------------------------------------
+    # 不正解の場合
+    # -----------------------------------------------------
+
     if not result.get(
         "is_correct",
         False,
     ):
 
-        st.markdown(
-            "### 📖 正解"
-        )
-
-        st.code(
-            question.get(
-                "answer",
-                "",
+        correct_option = (
+            get_option_by_label(
+                question,
+                question["answer"],
             )
         )
+
+        if correct_option:
+
+            st.markdown(
+                "### 📖 正解"
+            )
+
+            st.write(
+                f"**{correct_option['label']}．"
+                f"{correct_option['value']}**"
+            )
 
 
 # =========================================================
@@ -1500,16 +1420,11 @@ if st.session_state.history:
 
             else:
 
-                status = "🔴 要復習"
+                status = "🔴 不正解"
 
             st.markdown(
                 f"**第{question_number}問** "
                 f"{status}"
-            )
-
-            st.caption(
-                f"問題形式："
-                f"{record.get('question_type', '')}"
             )
 
             st.caption(
@@ -1528,8 +1443,11 @@ if st.session_state.history:
             )
 
             st.text(
-                f"正解：\n"
+                f"正解："
                 f"{record.get('correct_answer', '')}"
+                f"（"
+                f"{record.get('correct_value', '')}"
+                f"）"
             )
 
             st.caption(
@@ -1644,13 +1562,8 @@ with st.expander(
     )
 
     st.write(
-        f"有効な問題数："
-        f"{len(get_enabled_questions())}"
-    )
-
-    st.write(
-        f"登録問題総数："
-        f"{len(QUESTION_BANK)}"
+        f"問題数："
+        f"{len(QUESTION_BANK)}問"
     )
 
     st.write(
@@ -1659,27 +1572,34 @@ with st.expander(
     )
 
     st.write(
-        "AI問題生成：現在は使用しない"
+        "問題形式：空欄補充・4択"
     )
 
     st.write(
-        "AI採点：現在は使用しない"
+        "選択肢：ア・イ・ウ・エ"
     )
 
     st.write(
-        "問題選択：ルールベース"
+        "回答方法：記号または選択肢の語句"
     )
 
     st.write(
-        "回答判定：Python"
+        "AI問題生成：使用しない"
+    )
+
+    st.write(
+        "AI採点：使用しない"
+    )
+
+    st.write(
+        "正誤判定：Python"
+    )
+
+    st.write(
+        "次問題選択：固定順"
     )
 
     st.write(
         "学習履歴："
         "Streamlitセッション＋JSON"
-    )
-
-    st.write(
-        "選択問題の回答："
-        "ア・イ・ウ・エの記号に対応"
     )
