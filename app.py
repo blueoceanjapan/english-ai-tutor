@@ -14,8 +14,8 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.5.3"
-STATE_VERSION = 7
+APP_VERSION = "1.6.0-beta"
+STATE_VERSION = 8
 QUESTIONS_PER_BATCH = 5
 
 CHOICE_LABELS = ["ア", "イ", "ウ", "エ"]
@@ -49,241 +49,7 @@ LEARNING_OBJECTIVES = {
 # 問題データ
 # =========================================================
 
-QUESTION_BANK = [
-    {
-        "id": "gerund_001",
-        "major_question": 1,
-        "question_number": 1,
-        "question_type": "japanese_to_english_choice",
-        "objective": "gerund_basic",
-        "difficulty": 1,
-        "japanese": "泳ぐことは楽しいです。",
-        "english": "（　　　）is fun.",
-        "options": [
-            {"label": "ア", "value": "Swim", "error_type": "base_form"},
-            {"label": "イ", "value": "Swimming", "error_type": "none"},
-            {"label": "ウ", "value": "Swims", "error_type": "third_person"},
-            {"label": "エ", "value": "Swam", "error_type": "past_form"},
-        ],
-        "answer": "イ",
-        "explanation": (
-            "日本語の「泳ぐこと」は、動詞 swim の動作を「～すること」として表しています。"
-            "「～すること」を表すときは動名詞（～ing）を使うので、"
-            "swim → swimming となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_002",
-        "major_question": 1,
-        "question_number": 2,
-        "question_type": "japanese_to_english_choice",
-        "objective": "like_gerund",
-        "difficulty": 1,
-        "japanese": "私はテニスをすることが好きです。",
-        "english": "I like（　　　）tennis.",
-        "options": [
-            {"label": "ア", "value": "playing", "error_type": "none"},
-            {"label": "イ", "value": "play", "error_type": "base_form"},
-            {"label": "ウ", "value": "played", "error_type": "past_form"},
-            {"label": "エ", "value": "plays", "error_type": "third_person"},
-        ],
-        "answer": "ア",
-        "explanation": (
-            "日本語の「テニスをすること」の「すること」は、動詞 play の動作を表しています。"
-            "また、like の後ろでは動名詞（～ing）を使うので、"
-            "play → playing となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_003",
-        "major_question": 1,
-        "question_number": 3,
-        "question_type": "japanese_to_english_choice",
-        "objective": "like_gerund",
-        "difficulty": 1,
-        "japanese": "私は音楽を聴くことが好きです。",
-        "english": "I like（　　　）to music.",
-        "options": [
-            {"label": "ア", "value": "listen", "error_type": "base_form"},
-            {"label": "イ", "value": "listened", "error_type": "past_form"},
-            {"label": "ウ", "value": "listening", "error_type": "none"},
-            {"label": "エ", "value": "listens", "error_type": "third_person"},
-        ],
-        "answer": "ウ",
-        "explanation": (
-            "日本語の「音楽を聴くこと」の「聴くこと」は、動詞 listen の動作を表しています。"
-            "また、like の後ろでは動名詞（～ing）を使うので、"
-            "listen → listening となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_004",
-        "major_question": 1,
-        "question_number": 4,
-        "question_type": "japanese_to_english_choice",
-        "objective": "enjoy_gerund",
-        "difficulty": 1,
-        "japanese": "私は英語を勉強することを楽しんでいます。",
-        "english": "I enjoy（　　　）English.",
-        "options": [
-            {"label": "ア", "value": "study", "error_type": "base_form"},
-            {"label": "イ", "value": "studying", "error_type": "none"},
-            {"label": "ウ", "value": "studied", "error_type": "past_form"},
-            {"label": "エ", "value": "studies", "error_type": "third_person"},
-        ],
-        "answer": "イ",
-        "explanation": (
-            "日本語の「英語を勉強すること」の「すること」は、動詞 study の動作を表しています。"
-            "また、enjoy の後ろでは動名詞（～ing）を使うので、"
-            "study → studying となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_005",
-        "major_question": 1,
-        "question_number": 5,
-        "question_type": "japanese_to_english_choice",
-        "objective": "finish_gerund",
-        "difficulty": 1,
-        "japanese": "私は宿題を終えました。",
-        "english": "I finished（　　　）my homework.",
-        "options": [
-            {"label": "ア", "value": "do", "error_type": "base_form"},
-            {"label": "イ", "value": "did", "error_type": "past_form"},
-            {"label": "ウ", "value": "does", "error_type": "third_person"},
-            {"label": "エ", "value": "doing", "error_type": "none"},
-        ],
-        "answer": "エ",
-        "explanation": (
-            "日本語の「宿題を終えました」では、「宿題をすること」を表す動詞 do が使われています。"
-            "また、finish の後ろでは動名詞（～ing）を使うので、"
-            "do → doing となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_006",
-        "major_question": 1,
-        "question_number": 6,
-        "question_type": "japanese_to_english_choice",
-        "objective": "gerund_basic",
-        "difficulty": 1,
-        "japanese": "私の趣味は絵を描くことです。",
-        "english": "My hobby is（　　　）pictures.",
-        "options": [
-            {"label": "ア", "value": "draw", "error_type": "base_form"},
-            {"label": "イ", "value": "drew", "error_type": "past_form"},
-            {"label": "ウ", "value": "draws", "error_type": "third_person"},
-            {"label": "エ", "value": "drawing", "error_type": "none"},
-        ],
-        "answer": "エ",
-        "explanation": (
-            "日本語の「絵を描くこと」の「描くこと」は、動詞 draw の動作を表しています。"
-            "「～すること」を表すときは動名詞（～ing）を使うので、"
-            "draw → drawing となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_007",
-        "major_question": 1,
-        "question_number": 7,
-        "question_type": "japanese_to_english_choice",
-        "objective": "like_gerund",
-        "difficulty": 2,
-        "japanese": "彼女は本を読むことが好きです。",
-        "english": "She likes（　　　）books.",
-        "options": [
-            {"label": "ア", "value": "reading", "error_type": "none"},
-            {"label": "イ", "value": "read", "error_type": "base_form"},
-            {"label": "ウ", "value": "reads", "error_type": "third_person"},
-            {"label": "エ", "value": "readed", "error_type": "other"},
-        ],
-        "answer": "ア",
-        "explanation": (
-            "日本語の「本を読むこと」の「読むこと」は、動詞 read の動作を表しています。"
-            "また、like の後ろでは動名詞（～ing）を使うので、"
-            "read → reading となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_008",
-        "major_question": 1,
-        "question_number": 8,
-        "question_type": "japanese_to_english_choice",
-        "objective": "enjoy_gerund",
-        "difficulty": 1,
-        "japanese": "私は料理をすることを楽しんでいます。",
-        "english": "I enjoy（　　　）.",
-        "options": [
-            {"label": "ア", "value": "cook", "error_type": "base_form"},
-            {"label": "イ", "value": "cooked", "error_type": "past_form"},
-            {"label": "ウ", "value": "cooks", "error_type": "third_person"},
-            {"label": "エ", "value": "cooking", "error_type": "none"},
-        ],
-        "answer": "エ",
-        "explanation": (
-            "日本語の「料理をすること」の「すること」は、動詞 cook の動作を表しています。"
-            "また、enjoy の後ろでは動名詞（～ing）を使うので、"
-            "cook → cooking となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_009",
-        "major_question": 1,
-        "question_number": 9,
-        "question_type": "japanese_to_english_choice",
-        "objective": "finish_gerund",
-        "difficulty": 1,
-        "japanese": "彼女は昼食を食べ終えました。",
-        "english": "She finished（　　　）lunch.",
-        "options": [
-            {"label": "ア", "value": "eat", "error_type": "base_form"},
-            {"label": "イ", "value": "eating", "error_type": "none"},
-            {"label": "ウ", "value": "eats", "error_type": "third_person"},
-            {"label": "エ", "value": "ate", "error_type": "past_form"},
-        ],
-        "answer": "イ",
-        "explanation": (
-            "日本語の「昼食を食べ終えました」では、「食べること」を表す動詞 eat が使われています。"
-            "また、finish の後ろでは動名詞（～ing）を使うので、"
-            "eat → eating となります。"
-        ),
-    },
-
-    {
-        "id": "gerund_010",
-        "major_question": 1,
-        "question_number": 10,
-        "question_type": "japanese_to_english_choice",
-        "objective": "gerund_basic",
-        "difficulty": 2,
-        "japanese": "英語を勉強することは大切です。",
-        "english": "（　　　）English is important.",
-        "options": [
-            {"label": "ア", "value": "Studying", "error_type": "none"},
-            {"label": "イ", "value": "Study", "error_type": "base_form"},
-            {"label": "ウ", "value": "Studied", "error_type": "past_form"},
-            {"label": "エ", "value": "Studies", "error_type": "third_person"},
-        ],
-        "answer": "ア",
-        "explanation": (
-            "日本語の「英語を勉強すること」は、英語では文の主語として使われています。"
-            "「～すること」を主語として表すときは動名詞（～ing）を使うので、"
-            "study → Studying となります。"
-        ),
-    },
-]
-
-
-# =========================================================
-# 状態初期化
+QUESTION_BANK = [{'id': 'gerund_l1_001', 'major_question': 1, 'question_number': 1, 'question_type': 'japanese_to_english_choice', 'objective': 'gerund_basic', 'difficulty': 1, 'japanese': '泳ぐことは楽しいです。', 'english': '（\u3000\u3000\u3000）is fun.', 'options': [{'label': 'ア', 'value': 'Swim', 'error_type': 'base_form'}, {'label': 'イ', 'value': 'Swimming', 'error_type': 'none'}, {'label': 'ウ', 'value': 'Swims', 'error_type': 'third_person'}, {'label': 'エ', 'value': 'Swam', 'error_type': 'past_form'}], 'answer': 'イ', 'explanation': '「泳ぐこと」を表す動名詞は、swim に -ing を付けた swimming です。', 'level': 1, 'level_name': 'レベル1：動名詞の基本習得'}, {'id': 'gerund_l1_002', 'major_question': 1, 'question_number': 2, 'question_type': 'japanese_to_english_choice', 'objective': 'like_gerund', 'difficulty': 1, 'japanese': '私はテニスをすることが好きです。', 'english': 'I like（\u3000\u3000\u3000）tennis.', 'options': [{'label': 'ア', 'value': 'playing', 'error_type': 'none'}, {'label': 'イ', 'value': 'play', 'error_type': 'base_form'}, {'label': 'ウ', 'value': 'played', 'error_type': 'past_form'}, {'label': 'エ', 'value': 'plays', 'error_type': 'third_person'}], 'answer': 'ア', 'explanation': '「テニスをすること」が好きです、と書いてあるので、「～すること」を表すために play に -ing を付け、playing とします。', 'level': 1, 'level_name': 'レベル1：動名詞の基本習得'}, {'id': 'gerund_l1_003', 'major_question': 1, 'question_number': 3, 'question_type': 'japanese_to_english_choice', 'objective': 'like_gerund', 'difficulty': 1, 'japanese': '私は音楽を聴くことが好きです。', 'english': 'I like（\u3000\u3000\u3000）to music.', 'options': [{'label': 'ア', 'value': 'listen', 'error_type': 'base_form'}, {'label': 'イ', 'value': 'listened', 'error_type': 'past_form'}, {'label': 'ウ', 'value': 'listening', 'error_type': 'none'}, {'label': 'エ', 'value': 'listens', 'error_type': 'third_person'}], 'answer': 'ウ', 'explanation': '「音楽を聴くこと」が好きです、と書いてあるので、「～すること」を表すために listen に -ing を付け、listening とします。', 'level': 1, 'level_name': 'レベル1：動名詞の基本習得'}, {'id': 'gerund_l1_004', 'major_question': 1, 'question_number': 4, 'question_type': 'japanese_to_english_choice', 'objective': 'enjoy_gerund', 'difficulty': 1, 'japanese': '私は英語を勉強することを楽しんでいます。', 'english': 'I enjoy（\u3000\u3000\u3000）English.', 'options': [{'label': 'ア', 'value': 'study', 'error_type': 'base_form'}, {'label': 'イ', 'value': 'studying', 'error_type': 'none'}, {'label': 'ウ', 'value': 'studied', 'error_type': 'past_form'}, {'label': 'エ', 'value': 'studies', 'error_type': 'third_person'}], 'answer': 'イ', 'explanation': '「英語を勉強すること」を楽しんでいます、と書いてあるので、「～すること」を表すために study に -ing を付け、studying とします。', 'level': 1, 'level_name': 'レベル1：動名詞の基本習得'}, {'id': 'gerund_l1_005', 'major_question': 1, 'question_number': 5, 'question_type': 'japanese_to_english_choice', 'objective': 'finish_gerund', 'difficulty': 1, 'japanese': '私は宿題をすることを終えました。', 'english': 'I finished（\u3000\u3000\u3000）my homework.', 'options': [{'label': 'ア', 'value': 'do', 'error_type': 'base_form'}, {'label': 'イ', 'value': 'did', 'error_type': 'past_form'}, {'label': 'ウ', 'value': 'does', 'error_type': 'third_person'}, {'label': 'エ', 'value': 'doing', 'error_type': 'none'}], 'answer': 'エ', 'explanation': '「宿題をすることを終えました」と書いてあるので、「～すること」を表すために do に -ing を付け、doing とします。', 'level': 1, 'level_name': 'レベル1：動名詞の基本習得'}, {'id': 'gerund_l2_001', 'major_question': 2, 'question_number': 6, 'level': 2, 'level_name': 'レベル2：意味からの活用', 'question_type': 'japanese_to_english_choice', 'objective': 'like_gerund', 'difficulty': 2, 'japanese': '私は水泳が好きです。', 'english': 'I like（\u3000\u3000\u3000）.', 'options': [{'label': 'ァ', 'value': 'swim', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'swimming', 'error_type': 'none'}, {'label': 'ィ', 'value': 'swam', 'error_type': 'past_form'}, {'label': 'イ', 'value': 'swims', 'error_type': 'third_person'}], 'answer': 'イ', 'explanation': '「水泳が好きです」は、「泳ぐことが好きです」という意味です。「泳ぐこと」を表すため、swim に -ing を付けて swimming とします。'}, {'id': 'gerund_l2_002', 'major_question': 2, 'question_number': 7, 'level': 2, 'level_name': 'レベル2：意味からの活用', 'question_type': 'japanese_to_english_choice', 'objective': 'like_gerund', 'difficulty': 2, 'japanese': '彼は料理が好きです。', 'english': 'He likes（\u3000\u3000\u3000）.', 'options': [{'label': 'ァ', 'value': 'cook', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'cooking', 'error_type': 'none'}, {'label': 'ィ', 'value': 'cooked', 'error_type': 'past_form'}, {'label': 'イ', 'value': 'cooks', 'error_type': 'third_person'}], 'answer': 'イ', 'explanation': '「料理が好きです」は、「料理をすることが好きです」という意味です。「すること」を表すため、cook に -ing を付けて cooking とします。'}, {'id': 'gerund_l2_003', 'major_question': 2, 'question_number': 8, 'level': 2, 'level_name': 'レベル2：意味からの活用', 'question_type': 'japanese_to_english_choice', 'objective': 'enjoy_gerund', 'difficulty': 2, 'japanese': '私は料理を楽しんでいます。', 'english': 'I enjoy（\u3000\u3000\u3000）.', 'options': [{'label': 'ァ', 'value': 'cook', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'cooking', 'error_type': 'none'}, {'label': 'ィ', 'value': 'cooked', 'error_type': 'past_form'}, {'label': 'イ', 'value': 'cooks', 'error_type': 'third_person'}], 'answer': 'イ', 'explanation': '「料理を楽しんでいます」は、「料理をすることを楽しんでいます」という意味です。「すること」を表すため、cook に -ing を付けて cooking とします。'}, {'id': 'gerund_l2_004', 'major_question': 2, 'question_number': 9, 'level': 2, 'level_name': 'レベル2：意味からの活用', 'question_type': 'japanese_to_english_choice', 'objective': 'finish_gerund', 'difficulty': 2, 'japanese': '私は宿題を終えました。', 'english': 'I finished（\u3000\u3000\u3000）my homework.', 'options': [{'label': 'ァ', 'value': 'do', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'doing', 'error_type': 'none'}, {'label': 'ィ', 'value': 'did', 'error_type': 'past_form'}, {'label': 'イ', 'value': 'does', 'error_type': 'third_person'}], 'answer': 'イ', 'explanation': '「宿題を終えました」は、「宿題をすることを終えました」という意味です。「すること」を表すため、do に -ing を付けて doing とします。'}, {'id': 'gerund_l2_005', 'major_question': 2, 'question_number': 10, 'level': 2, 'level_name': 'レベル2：意味からの活用', 'question_type': 'japanese_to_english_choice', 'objective': 'gerund_basic', 'difficulty': 2, 'japanese': '英語の勉強は大切です。', 'english': '（\u3000\u3000\u3000）English is important.', 'options': [{'label': 'ァ', 'value': 'Study', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'Studying', 'error_type': 'none'}, {'label': 'ィ', 'value': 'Studied', 'error_type': 'past_form'}, {'label': 'イ', 'value': 'Studies', 'error_type': 'third_person'}], 'answer': 'イ', 'explanation': '「英語の勉強」は、「英語を勉強すること」という意味です。「勉強すること」を文の主語にするため、study に -ing を付けて Studying とします。'}, {'id': 'gerund_l3_001', 'major_question': 3, 'question_number': 11, 'level': 3, 'level_name': 'レベル3：ルールの使い分け・干渉', 'question_type': 'japanese_to_english_choice', 'objective': 'like_gerund', 'difficulty': 3, 'japanese': '彼女は本を読むことが好きです。', 'english': 'She likes（\u3000\u3000\u3000）books.', 'options': [{'label': 'ァ', 'value': 'reading', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'read', 'error_type': 'base_form'}, {'label': 'ィ', 'value': 'reads', 'error_type': 'third_person'}, {'label': 'イ', 'value': 'readed', 'error_type': 'past_form'}], 'answer': 'ア', 'explanation': '「本を読むこと」が好きなので、read に -ing を付けて reading とします。She は三人称単数ですが、三単現のSを付けるのは主語のあとにある動詞です。ここでは likes がすでに三単現の形になっているので、空欄では三単現のSではなく、「～すること」を表す動名詞の形に集中します。'}, {'id': 'gerund_l3_002', 'major_question': 3, 'question_number': 12, 'level': 3, 'level_name': 'レベル3：ルールの使い分け・干渉', 'question_type': 'japanese_to_english_choice', 'objective': 'finish_gerund', 'difficulty': 3, 'japanese': '彼女は昼食を食べ終えました。', 'english': 'She finished（\u3000\u3000\u3000）lunch.', 'options': [{'label': 'ァ', 'value': 'eating', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'eat', 'error_type': 'base_form'}, {'label': 'ィ', 'value': 'eats', 'error_type': 'base_form'}, {'label': 'イ', 'value': 'ate', 'error_type': 'past_form'}], 'answer': 'ア', 'explanation': '「昼食を食べることを終えました」という意味なので、eat に -ing を付けて eating とします。finished はすでに過去形になっているので、空欄の動詞まで過去形にする必要はありません。ここでは finished の時制ではなく、finish の後ろで「～すること」を表す形に注目します。'}, {'id': 'gerund_l3_003', 'major_question': 3, 'question_number': 13, 'level': 3, 'level_name': 'レベル3：ルールの使い分け・干渉', 'question_type': 'japanese_to_english_choice', 'objective': 'enjoy_gerund', 'difficulty': 3, 'japanese': '彼はギターを弾くことを楽しんでいます。', 'english': 'He enjoys（\u3000\u3000\u3000）the guitar.', 'options': [{'label': 'ァ', 'value': 'play', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'played', 'error_type': 'past_form'}, {'label': 'ィ', 'value': 'plays', 'error_type': 'third_person'}, {'label': 'イ', 'value': 'playing', 'error_type': 'base_form'}], 'answer': 'エ', 'explanation': '「ギターを弾くこと」を楽しんでいるので、play に -ing を付けて playing とします。He は三人称単数ですが、三単現のSは enjoys がすでに処理しています。そのため空欄では plays ではなく、動名詞 playing を選びます。'}, {'id': 'gerund_l3_004', 'major_question': 3, 'question_number': 14, 'level': 3, 'level_name': 'レベル3：ルールの使い分け・干渉', 'question_type': 'japanese_to_english_choice', 'objective': 'like_gerund', 'difficulty': 3, 'japanese': '彼女はテニスをすることが好きです。', 'english': 'She likes（\u3000\u3000\u3000）tennis.', 'options': [{'label': 'ァ', 'value': 'play', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'playing', 'error_type': 'base_form'}, {'label': 'ィ', 'value': 'plays', 'error_type': 'third_person'}, {'label': 'イ', 'value': 'played', 'error_type': 'past_form'}], 'answer': 'イ', 'explanation': '「テニスをすること」が好きなので、play に -ing を付けて playing とします。likes がすでに三単現の形なので、空欄では三単現のSを考えるのではなく、「～すること」を表す動名詞の形に集中します。'}, {'id': 'gerund_l3_005', 'major_question': 3, 'question_number': 15, 'level': 3, 'level_name': 'レベル3：ルールの使い分け・干渉', 'question_type': 'japanese_to_english_choice', 'objective': 'finish_gerund', 'difficulty': 3, 'japanese': '彼は宿題をすることを終えました。', 'english': 'He finished（\u3000\u3000\u3000）his homework.', 'options': [{'label': 'ァ', 'value': 'do', 'error_type': 'base_form'}, {'label': 'ア', 'value': 'did', 'error_type': 'past_form'}, {'label': 'ィ', 'value': 'does', 'error_type': 'third_person'}, {'label': 'イ', 'value': 'doing', 'error_type': 'base_form'}], 'answer': 'エ', 'explanation': '「宿題をすることを終えました」なので、do に -ing を付けて doing とします。He は三人称単数ですが、三単現のSはここでは考えません。また finished がすでに過去形なので、空欄を did にする必要もありません。空欄では、finish の後ろに置く「～すること」の形に集中します。'}]
 # =========================================================
 
 def initialize_state():
@@ -305,6 +71,8 @@ def initialize_state():
         st.session_state.batch_submitted = False
 
         st.session_state.student_name = ""
+        st.session_state.current_level = 1
+        st.session_state.level_batch_number = 0
 
         return
 
@@ -331,6 +99,16 @@ def initialize_state():
     st.session_state.setdefault(
         "student_name",
         "",
+    )
+
+    st.session_state.setdefault(
+        "current_level",
+        1,
+    )
+
+    st.session_state.setdefault(
+        "level_batch_number",
+        0,
     )
 
 
@@ -631,6 +409,9 @@ def create_history_record(
         "difficulty": question[
             "difficulty"
         ],
+
+        "level": question.get("level", ""),
+        "level_name": question.get("level_name", ""),
 
         "japanese": question[
             "japanese"
@@ -1111,11 +892,10 @@ def import_history(
 # 現在の問題
 # =========================================================
 
-current_questions = (
-    get_questions_for_batch(
-        st.session_state.batch_number
-    )
-)
+current_level = st.session_state.get("current_level", 1)
+current_level_questions = [q for q in QUESTION_BANK if q.get("level") == current_level]
+level_offset = st.session_state.get("level_batch_number", 0) * QUESTIONS_PER_BATCH
+current_questions = current_level_questions[level_offset:level_offset + QUESTIONS_PER_BATCH]
 
 
 # =========================================================
@@ -1127,12 +907,12 @@ st.title(
 )
 
 st.caption(
-    "第1段階：動名詞・空欄補充4択"
+    f"仮バージョン｜レベル{current_level}：{current_questions[0]['level_name']}"
 )
 
 st.info(
-    "この試験版では、5問をまとめて解答します。"
-    "選択肢をクリックして答えてください。"
+    "各レベルは5問を1セットとして実施します。"
+    "この仮バージョンでは、各レベルで5問すべて正解した場合のみ次のレベルへ進みます。"
 )
 
 
@@ -1164,14 +944,14 @@ st.markdown(
     "## 🎯 今回の学習目標"
 )
 
-st.write(
-    "**動名詞の基本を理解する**"
-)
-
-st.caption(
-    "今回の5問では、動名詞の形と、"
-    "like・enjoy・finish の後ろでの使い方を確認します。"
-)
+level_goals = {
+    1: ("動名詞の基本を習得する", "日本語に「～すること」を明示し、動名詞の基本的な形を確認します。"),
+    2: ("習得した動名詞を意味から活用する", "日本語に「～すること」を明示せず、意味から動名詞を選べるか確認します。"),
+    3: ("既習ルールの干渉があっても動名詞を選択する", "三人称単数や過去形などの干渉条件を置き、必要なルールを使い分けられるか確認します。"),
+}
+goal_title, goal_description = level_goals[current_level]
+st.write(f"**{goal_title}**")
+st.caption(goal_description)
 
 
 # =========================================================
@@ -1181,7 +961,7 @@ st.caption(
 st.markdown("---")
 
 st.markdown(
-    "## 📄 大問1"
+    f"## 📄 レベル{current_level}・第{st.session_state.get('level_batch_number', 0) + 1}セット"
 )
 
 st.info(
@@ -1527,49 +1307,42 @@ if (
 
 
     # =====================================================
-    # 次の5問
+    # レベル進行
     # =====================================================
 
-    next_start = (
-        (
-            st.session_state.batch_number
-            + 1
-        )
-        * QUESTIONS_PER_BATCH
+    batch_is_perfect = (
+        batch_correct == batch_total
+        and batch_total == QUESTIONS_PER_BATCH
     )
 
-    if next_start < len(
-        QUESTION_BANK
-    ):
+    st.markdown("---")
 
-        st.markdown("---")
-
-        if st.button(
-            "次の5問へ ➡️",
-            type="primary",
-        ):
-
-            st.session_state.batch_number += 1
-
-            st.session_state.batch_results = (
-                None
-            )
-
-            st.session_state.batch_submitted = (
-                False
-            )
-
-            st.session_state.scroll_to_top = True
-
-            st.rerun()
-
+    if batch_is_perfect:
+        st.success(f"レベル{current_level}のこのセットは満点です。")
+        if current_level < 3:
+            if st.button(f"レベル{current_level + 1}へ進む ➡️", type="primary"):
+                st.session_state.current_level = current_level + 1
+                st.session_state.level_batch_number = 0
+                st.session_state.batch_results = None
+                st.session_state.batch_submitted = False
+                st.session_state.batch_number += 1
+                st.session_state.scroll_to_top = True
+                st.rerun()
+        else:
+            st.success("レベル3で満点を達成しました。この仮バージョンでは、習得した知識を干渉条件のある問題でも活用できたと記録します。")
     else:
-
-        st.markdown("---")
-
-        st.success(
-            "現在用意されている問題はすべて終了しました。"
-        )
+        st.warning(f"レベル{current_level}は満点ではありません。次のレベルへは進みません。")
+        next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
+        if next_offset < len(current_level_questions):
+            if st.button("同じレベルの次セットへ ➡️", type="primary"):
+                st.session_state.level_batch_number += 1
+                st.session_state.batch_number += 1
+                st.session_state.batch_results = None
+                st.session_state.batch_submitted = False
+                st.session_state.scroll_to_top = True
+                st.rerun()
+        else:
+            st.info("この仮バージョンでは、未達時の類題自動生成はまだ実装していません。")
 
 
 # =========================================================
@@ -1915,6 +1688,9 @@ with st.expander(
         f"登録問題数："
         f"{len(QUESTION_BANK)}問"
     )
+
+    st.write("レベル構成：レベル1・レベル2・レベル3")
+    st.write("進級条件：各レベルの1セット5問すべて正解")
 
     st.write(
         "大問形式："
