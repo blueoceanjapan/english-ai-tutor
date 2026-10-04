@@ -14,32 +14,25 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.2.0"
-STATE_VERSION = 4
+APP_VERSION = "1.3.0"
+STATE_VERSION = 5
+
+QUESTIONS_PER_BATCH = 5
 
 
 # =========================================================
 # 教育設計
 # =========================================================
 #
-# 第1段階では、
+# 第1段階：
 #
-# 「空欄補充 × 4択」
-#
-# に限定する。
-#
-# 生徒は、
-#
-#   ア
-#   イ
-#   ウ
-#   エ
-#
-# の記号で回答する。
-#
-# 選択肢そのものを入力した場合も受け付ける。
-#
-# AIは現段階では使用しない。
+# ・空欄補充
+# ・4択
+# ・ア／イ／ウ／エで回答
+# ・5問を1セットとして提示
+# ・5問終了後に一括採点
+# ・Pythonによる正誤判定
+# ・AIはまだ使用しない
 #
 # =========================================================
 
@@ -91,22 +84,21 @@ CHOICE_LABELS = [
 # 問題バンク
 # =========================================================
 #
-# すべて「空欄補充 × 4択」。
+# 現段階では10問。
 #
-# answer:
-#   正解の記号
+# 1セット5問。
 #
-# options:
-#   ア・イ・ウ・エの4択
+# 最初の5問を解いた後、
+# 次の5問に進む。
 #
 # =========================================================
 
 
 QUESTION_BANK = [
 
-    # -----------------------------------------------------
-    # 動名詞の基本
-    # -----------------------------------------------------
+    # =====================================================
+    # 第1セット
+    # =====================================================
 
     {
         "id": "basic_001",
@@ -114,8 +106,7 @@ QUESTION_BANK = [
         "objective": "gerund_basic",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
             "（　　　）is fun."
         ),
         "japanese": "「泳ぐことは楽しいです。」",
@@ -123,18 +114,22 @@ QUESTION_BANK = [
             {
                 "label": "ア",
                 "value": "Swim",
+                "error_type": "base_form",
             },
             {
                 "label": "イ",
                 "value": "Swimming",
+                "error_type": "none",
             },
             {
                 "label": "ウ",
                 "value": "Swims",
+                "error_type": "third_person",
             },
             {
                 "label": "エ",
                 "value": "Swam",
+                "error_type": "past_form",
             },
         ],
         "answer": "イ",
@@ -145,52 +140,12 @@ QUESTION_BANK = [
     },
 
     {
-        "id": "basic_002",
-        "question_type": "fill_blank_choice",
-        "objective": "gerund_basic",
-        "difficulty": 1,
-        "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
-            "My hobby is（　　　）pictures."
-        ),
-        "japanese": "「私の趣味は絵を描くことです。」",
-        "options": [
-            {
-                "label": "ア",
-                "value": "draw",
-            },
-            {
-                "label": "イ",
-                "value": "drew",
-            },
-            {
-                "label": "ウ",
-                "value": "drawing",
-            },
-            {
-                "label": "エ",
-                "value": "draws",
-            },
-        ],
-        "answer": "ウ",
-        "explanation": (
-            "「絵を描くこと」は動名詞 drawing で表します。"
-        ),
-    },
-
-    # -----------------------------------------------------
-    # like + 動名詞
-    # -----------------------------------------------------
-
-    {
         "id": "like_001",
         "question_type": "fill_blank_choice",
         "objective": "like_gerund",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
             "I like（　　　）tennis."
         ),
         "japanese": "「私はテニスをすることが好きです。」",
@@ -198,18 +153,22 @@ QUESTION_BANK = [
             {
                 "label": "ア",
                 "value": "playing",
+                "error_type": "none",
             },
             {
                 "label": "イ",
                 "value": "play",
+                "error_type": "base_form",
             },
             {
                 "label": "ウ",
                 "value": "played",
+                "error_type": "past_form",
             },
             {
                 "label": "エ",
                 "value": "plays",
+                "error_type": "third_person",
             },
         ],
         "answer": "ア",
@@ -225,8 +184,7 @@ QUESTION_BANK = [
         "objective": "like_gerund",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
             "I like（　　　）to music."
         ),
         "japanese": "「私は音楽を聴くことが好きです。」",
@@ -234,18 +192,22 @@ QUESTION_BANK = [
             {
                 "label": "ア",
                 "value": "listen",
+                "error_type": "base_form",
             },
             {
                 "label": "イ",
                 "value": "listening",
+                "error_type": "none",
             },
             {
                 "label": "ウ",
                 "value": "listened",
+                "error_type": "past_form",
             },
             {
                 "label": "エ",
                 "value": "listens",
+                "error_type": "third_person",
             },
         ],
         "answer": "イ",
@@ -256,52 +218,12 @@ QUESTION_BANK = [
     },
 
     {
-        "id": "like_003",
-        "question_type": "fill_blank_choice",
-        "objective": "like_gerund",
-        "difficulty": 2,
-        "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
-            "She likes（　　　）books."
-        ),
-        "japanese": "「彼女は本を読むことが好きです。」",
-        "options": [
-            {
-                "label": "ア",
-                "value": "read",
-            },
-            {
-                "label": "イ",
-                "value": "reads",
-            },
-            {
-                "label": "ウ",
-                "value": "reading",
-            },
-            {
-                "label": "エ",
-                "value": "readed",
-            },
-        ],
-        "answer": "ウ",
-        "explanation": (
-            "like の後ろに動名詞 reading を使います。"
-        ),
-    },
-
-    # -----------------------------------------------------
-    # enjoy + 動名詞
-    # -----------------------------------------------------
-
-    {
         "id": "enjoy_001",
         "question_type": "fill_blank_choice",
         "objective": "enjoy_gerund",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
             "I enjoy（　　　）English."
         ),
         "japanese": "「私は英語を勉強することを楽しんでいます。」",
@@ -309,18 +231,22 @@ QUESTION_BANK = [
             {
                 "label": "ア",
                 "value": "study",
+                "error_type": "base_form",
             },
             {
                 "label": "イ",
                 "value": "studying",
+                "error_type": "none",
             },
             {
                 "label": "ウ",
                 "value": "studied",
+                "error_type": "past_form",
             },
             {
                 "label": "エ",
                 "value": "studies",
+                "error_type": "third_person",
             },
         ],
         "answer": "イ",
@@ -330,13 +256,131 @@ QUESTION_BANK = [
     },
 
     {
+        "id": "finish_001",
+        "question_type": "fill_blank_choice",
+        "objective": "finish_gerund",
+        "difficulty": 1,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
+            "I finished（　　　）my homework."
+        ),
+        "japanese": "「私は宿題を終えました。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "do",
+                "error_type": "base_form",
+            },
+            {
+                "label": "イ",
+                "value": "doing",
+                "error_type": "none",
+            },
+            {
+                "label": "ウ",
+                "value": "did",
+                "error_type": "past_form",
+            },
+            {
+                "label": "エ",
+                "value": "does",
+                "error_type": "third_person",
+            },
+        ],
+        "answer": "イ",
+        "explanation": (
+            "finish の後ろに動名詞 doing を使います。"
+        ),
+    },
+
+
+    # =====================================================
+    # 第2セット
+    # =====================================================
+
+    {
+        "id": "basic_002",
+        "question_type": "fill_blank_choice",
+        "objective": "gerund_basic",
+        "difficulty": 1,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
+            "My hobby is（　　　）pictures."
+        ),
+        "japanese": "「私の趣味は絵を描くことです。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "draw",
+                "error_type": "base_form",
+            },
+            {
+                "label": "イ",
+                "value": "drew",
+                "error_type": "past_form",
+            },
+            {
+                "label": "ウ",
+                "value": "drawing",
+                "error_type": "none",
+            },
+            {
+                "label": "エ",
+                "value": "draws",
+                "error_type": "third_person",
+            },
+        ],
+        "answer": "ウ",
+        "explanation": (
+            "「絵を描くこと」は動名詞 drawing で表します。"
+        ),
+    },
+
+    {
+        "id": "like_003",
+        "question_type": "fill_blank_choice",
+        "objective": "like_gerund",
+        "difficulty": 2,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
+            "She likes（　　　）books."
+        ),
+        "japanese": "「彼女は本を読むことが好きです。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "read",
+                "error_type": "base_form",
+            },
+            {
+                "label": "イ",
+                "value": "reads",
+                "error_type": "third_person",
+            },
+            {
+                "label": "ウ",
+                "value": "reading",
+                "error_type": "none",
+            },
+            {
+                "label": "エ",
+                "value": "readed",
+                "error_type": "other",
+            },
+        ],
+        "answer": "ウ",
+        "explanation": (
+            "like の後ろに動名詞 reading を使います。"
+        ),
+    },
+
+    {
         "id": "enjoy_002",
         "question_type": "fill_blank_choice",
         "objective": "enjoy_gerund",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
             "I enjoy（　　　）."
         ),
         "japanese": "「私は料理をすることを楽しんでいます。」",
@@ -344,18 +388,22 @@ QUESTION_BANK = [
             {
                 "label": "ア",
                 "value": "cook",
+                "error_type": "base_form",
             },
             {
                 "label": "イ",
                 "value": "cooked",
+                "error_type": "past_form",
             },
             {
                 "label": "ウ",
                 "value": "cooks",
+                "error_type": "third_person",
             },
             {
                 "label": "エ",
                 "value": "cooking",
+                "error_type": "none",
             },
         ],
         "answer": "エ",
@@ -365,87 +413,12 @@ QUESTION_BANK = [
     },
 
     {
-        "id": "enjoy_003",
-        "question_type": "fill_blank_choice",
-        "objective": "enjoy_gerund",
-        "difficulty": 2,
-        "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
-            "He enjoys（　　　）soccer."
-        ),
-        "japanese": "「彼はサッカーをすることを楽しんでいます。」",
-        "options": [
-            {
-                "label": "ア",
-                "value": "play",
-            },
-            {
-                "label": "イ",
-                "value": "playing",
-            },
-            {
-                "label": "ウ",
-                "value": "played",
-            },
-            {
-                "label": "エ",
-                "value": "plays",
-            },
-        ],
-        "answer": "イ",
-        "explanation": (
-            "enjoys の後ろに動名詞 playing を使います。"
-        ),
-    },
-
-    # -----------------------------------------------------
-    # finish + 動名詞
-    # -----------------------------------------------------
-
-    {
-        "id": "finish_001",
-        "question_type": "fill_blank_choice",
-        "objective": "finish_gerund",
-        "difficulty": 1,
-        "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
-            "I finished（　　　）my homework."
-        ),
-        "japanese": "「私は宿題を終えました。」",
-        "options": [
-            {
-                "label": "ア",
-                "value": "do",
-            },
-            {
-                "label": "イ",
-                "value": "doing",
-            },
-            {
-                "label": "ウ",
-                "value": "did",
-            },
-            {
-                "label": "エ",
-                "value": "does",
-            },
-        ],
-        "answer": "イ",
-        "explanation": (
-            "finish の後ろに動名詞 doing を使います。"
-        ),
-    },
-
-    {
         "id": "finish_002",
         "question_type": "fill_blank_choice",
         "objective": "finish_gerund",
         "difficulty": 1,
         "question": (
-            "次の英文の空欄に入る最も適切な語を選びなさい。"
-            "\n\n"
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
             "She finished（　　　）lunch."
         ),
         "japanese": "「彼女は昼食を食べ終えました。」",
@@ -453,23 +426,66 @@ QUESTION_BANK = [
             {
                 "label": "ア",
                 "value": "eat",
+                "error_type": "base_form",
             },
             {
                 "label": "イ",
                 "value": "eats",
+                "error_type": "third_person",
             },
             {
                 "label": "ウ",
                 "value": "eating",
+                "error_type": "none",
             },
             {
                 "label": "エ",
                 "value": "ate",
+                "error_type": "past_form",
             },
         ],
         "answer": "ウ",
         "explanation": (
             "finish の後ろに動名詞 eating を使います。"
+        ),
+    },
+
+    {
+        "id": "basic_003",
+        "question_type": "fill_blank_choice",
+        "objective": "gerund_basic",
+        "difficulty": 2,
+        "question": (
+            "次の英文の空欄に入る最も適切な語を選びなさい。\n\n"
+            "（　　　）English is important."
+        ),
+        "japanese": "「英語を勉強することは大切です。」",
+        "options": [
+            {
+                "label": "ア",
+                "value": "Study",
+                "error_type": "base_form",
+            },
+            {
+                "label": "イ",
+                "value": "Studied",
+                "error_type": "past_form",
+            },
+            {
+                "label": "ウ",
+                "value": "Studies",
+                "error_type": "third_person",
+            },
+            {
+                "label": "エ",
+                "value": "Studying",
+                "error_type": "none",
+            },
+        ],
+        "answer": "エ",
+        "explanation": (
+            "「英語を勉強すること」を文の主語として使うため、"
+            "動名詞 Studying を使います。"
         ),
     },
 ]
@@ -480,20 +496,44 @@ QUESTION_BANK = [
 # =========================================================
 
 
-def get_question(question_id):
+def get_question(
+    question_id,
+):
     """問題IDから問題を取得する。"""
 
     for question in QUESTION_BANK:
+
         if question["id"] == question_id:
+
             return question
 
     return QUESTION_BANK[0]
 
 
-def get_current_question():
-    return get_question(
-        st.session_state.current_question_id
+def get_questions_for_batch(
+    batch_number,
+):
+    """
+    指定されたセットの5問を取得する。
+
+    batch_number:
+        0 → 第1セット
+        1 → 第2セット
+    """
+
+    start = (
+        batch_number
+        * QUESTIONS_PER_BATCH
     )
+
+    end = (
+        start
+        + QUESTIONS_PER_BATCH
+    )
+
+    return QUESTION_BANK[
+        start:end
+    ]
 
 
 # =========================================================
@@ -501,15 +541,20 @@ def get_current_question():
 # =========================================================
 
 
-def normalize_answer(text):
+def normalize_answer(
+    text,
+):
     """
     回答比較用の正規化。
 
-    「ア」「ア。」「ア．」などを
-    同じ回答として扱えるようにする。
+    ア・イ・ウ・エの記号について、
+    「ア。」
+    「ア．」
+    なども同じものとして扱う。
     """
 
     if text is None:
+
         return ""
 
     text = str(text).strip()
@@ -521,7 +566,6 @@ def normalize_answer(text):
 
     text = text.lower()
 
-    # 選択記号の後ろについた句読点を除去
     text = text.rstrip(
         "。．.、,）)"
     )
@@ -543,13 +587,14 @@ def get_option_by_label(
     for option in question["options"]:
 
         if option["label"] == label:
+
             return option
 
     return None
 
 
 # =========================================================
-# 回答判定
+# 1問の回答判定
 # =========================================================
 
 
@@ -560,14 +605,13 @@ def check_answer(
     """
     4択問題を判定する。
 
-    例：
-
+    生徒は、
         ア
         イ
         ウ
         エ
 
-    の記号で回答可能。
+    の記号で回答する。
 
     選択肢そのものを入力した場合も受け付ける。
     """
@@ -596,7 +640,7 @@ def check_answer(
     )
 
     # -----------------------------------------------------
-    # 記号で回答
+    # 正解記号
     # -----------------------------------------------------
 
     if normalized_user == correct_label:
@@ -606,13 +650,14 @@ def check_answer(
             "judgement": "正解",
             "mistake_type": "none",
             "feedback": (
-                "正解です。\n\n"
+                "正解です。"
+                "\n\n"
                 + question["explanation"]
             ),
         }
 
     # -----------------------------------------------------
-    # 選択肢そのもので回答
+    # 選択肢そのもの
     # -----------------------------------------------------
 
     if normalized_user == correct_value:
@@ -622,7 +667,8 @@ def check_answer(
             "judgement": "正解",
             "mistake_type": "none",
             "feedback": (
-                "正解です。\n\n"
+                "正解です。"
+                "\n\n"
                 + question["explanation"]
             ),
         }
@@ -631,19 +677,97 @@ def check_answer(
     # 不正解
     # -----------------------------------------------------
 
+    selected_option = None
+
+    for option in question["options"]:
+
+        if (
+            normalize_answer(
+                option["label"]
+            )
+            == normalized_user
+        ):
+
+            selected_option = option
+
+            break
+
+    if selected_option:
+
+        mistake_type = selected_option.get(
+            "error_type",
+            "answer_error",
+        )
+
+    else:
+
+        mistake_type = "invalid_answer"
+
     return {
         "is_correct": False,
-        "judgement": "要復習",
-        "mistake_type": "answer_error",
+        "judgement": "不正解",
+        "mistake_type": mistake_type,
         "feedback": (
-            "今回は正解ではありません。\n\n"
+            "今回は正解ではありません。"
+            "\n\n"
             + question["explanation"]
         ),
     }
 
 
 # =========================================================
-# 学習履歴
+# 5問セットの一括採点
+# =========================================================
+
+
+def evaluate_batch(
+    questions,
+    answers,
+):
+    """
+    5問をまとめて採点する。
+    """
+
+    results = []
+
+    for question in questions:
+
+        user_answer = answers.get(
+            question["id"],
+            "",
+        )
+
+        if not user_answer.strip():
+
+            result = {
+                "is_correct": False,
+                "judgement": "未回答",
+                "mistake_type": "unanswered",
+                "feedback": (
+                    "この問題には回答がありません。"
+                ),
+            }
+
+        else:
+
+            result = check_answer(
+                question,
+                user_answer,
+            )
+
+        results.append(
+            {
+                "question": question,
+                "user_answer": user_answer,
+                "result": result,
+            }
+        )
+
+    return results
+
+
+# =========================================================
+# 学習履歴レコード
 # =========================================================
 
 
@@ -671,6 +795,9 @@ def create_history_record(
         "timestamp": datetime.now().isoformat(
             timespec="seconds"
         ),
+        "batch_number": (
+            st.session_state.batch_number
+        ),
         "question_id": question["id"],
         "question_type": question[
             "question_type"
@@ -690,9 +817,9 @@ def create_history_record(
             "",
         ),
         "user_answer": user_answer,
-        "correct_answer": (
-            question["answer"]
-        ),
+        "correct_answer": question[
+            "answer"
+        ],
         "correct_value": (
             correct_option["value"]
             if correct_option
@@ -714,12 +841,46 @@ def create_history_record(
 
 
 # =========================================================
-# 学習目標別成績
+# 学習状況
 # =========================================================
 
 
+def calculate_overall_stats():
+    """全問題の成績を計算する。"""
+
+    total = len(
+        st.session_state.history
+    )
+
+    correct = sum(
+        1
+        for record
+        in st.session_state.history
+        if record.get(
+            "is_correct",
+            False,
+        )
+    )
+
+    accuracy = (
+        correct
+        / total
+        * 100
+        if total > 0
+        else 0
+    )
+
+    return {
+        "total": total,
+        "correct": correct,
+        "accuracy": accuracy,
+    }
+
+
 def calculate_objective_stats():
-    """学習目標ごとの成績を計算する。"""
+    """
+    学習目標ごとの成績を計算する。
+    """
 
     stats = {}
 
@@ -729,19 +890,24 @@ def calculate_objective_stats():
     ) in LEARNING_OBJECTIVES.items():
 
         stats[objective_id] = {
-            "name": objective["name"],
+            "name": objective[
+                "name"
+            ],
             "total": 0,
             "correct": 0,
             "accuracy": 0.0,
         }
 
-    for record in st.session_state.history:
+    for record in (
+        st.session_state.history
+    ):
 
         objective_id = record.get(
             "objective"
         )
 
         if objective_id not in stats:
+
             continue
 
         stats[
@@ -781,34 +947,53 @@ def calculate_objective_stats():
 
 
 # =========================================================
-# 次の問題
-# =========================================================
-#
-# 現段階では複雑な適応学習を入れず、
-# 未回答の問題を順番に出す。
-#
+# 誤答傾向
 # =========================================================
 
 
-def select_next_question():
+def calculate_mistake_stats():
+    """
+    誤答タイプを集計する。
 
-    attempted_ids = {
-        record.get(
-            "question_id"
+    例：
+
+    base_form
+    past_form
+    third_person
+    other
+    unanswered
+
+    """
+
+    mistake_stats = {}
+
+    for record in (
+        st.session_state.history
+    ):
+
+        if record.get(
+            "is_correct",
+            False,
+        ):
+
+            continue
+
+        mistake_type = record.get(
+            "mistake_type",
+            "other",
         )
-        for record
-        in st.session_state.history
-    }
 
-    # 未回答問題を探す
-    for question in QUESTION_BANK:
+        mistake_stats[
+            mistake_type
+        ] = (
+            mistake_stats.get(
+                mistake_type,
+                0,
+            )
+            + 1
+        )
 
-        if question["id"] not in attempted_ids:
-
-            return question
-
-    # 全問終了したら最初に戻る
-    return QUESTION_BANK[0]
+    return mistake_stats
 
 
 # =========================================================
@@ -905,17 +1090,15 @@ def initialize_state():
             STATE_VERSION
         )
 
-        st.session_state.current_question_id = (
-            QUESTION_BANK[0]["id"]
-        )
+        st.session_state.batch_number = 0
 
         st.session_state.history = []
 
-        st.session_state.feedback = None
+        st.session_state.batch_results = None
 
-        st.session_state.next_ready = False
+        st.session_state.batch_submitted = False
 
-        st.session_state.last_result = None
+        st.session_state.student_answers = {}
 
     # -----------------------------------------------------
     # 通常起動
@@ -924,13 +1107,11 @@ def initialize_state():
     else:
 
         if (
-            "current_question_id"
+            "batch_number"
             not in st.session_state
         ):
 
-            st.session_state.current_question_id = (
-                QUESTION_BANK[0]["id"]
-            )
+            st.session_state.batch_number = 0
 
         if (
             "history"
@@ -940,25 +1121,25 @@ def initialize_state():
             st.session_state.history = []
 
         if (
-            "feedback"
+            "batch_results"
             not in st.session_state
         ):
 
-            st.session_state.feedback = None
+            st.session_state.batch_results = None
 
         if (
-            "next_ready"
+            "batch_submitted"
             not in st.session_state
         ):
 
-            st.session_state.next_ready = False
+            st.session_state.batch_submitted = False
 
         if (
-            "last_result"
+            "student_answers"
             not in st.session_state
         ):
 
-            st.session_state.last_result = None
+            st.session_state.student_answers = {}
 
     if (
         "student_name"
@@ -969,6 +1150,16 @@ def initialize_state():
 
 
 initialize_state()
+
+
+# =========================================================
+# 現在の5問
+# =========================================================
+
+
+current_questions = get_questions_for_batch(
+    st.session_state.batch_number
+)
 
 
 # =========================================================
@@ -985,9 +1176,8 @@ st.caption(
 )
 
 st.info(
-    "この試験版では、まず空欄補充の4択問題で"
-    "基礎を確認します。"
-    "答えは「ア・イ・ウ・エ」の記号で入力できます。"
+    "この試験版では、5問をまとめて解答します。"
+    "答えは「ア・イ・ウ・エ」の記号で入力してください。"
 )
 
 
@@ -1013,313 +1203,208 @@ st.session_state.student_name = (
 
 
 # =========================================================
-# 現在の問題
-# =========================================================
-
-
-question = get_current_question()
-
-objective = LEARNING_OBJECTIVES[
-    question["objective"]
-]
-
-
-st.markdown("---")
-
-
-# =========================================================
 # 学習目標
 # =========================================================
 
+
+st.markdown("---")
 
 st.markdown(
     "### 🎯 今回の学習目標"
 )
 
 st.write(
-    f"**{objective['name']}**"
+    "**動名詞の基本を理解する**"
 )
 
 st.caption(
-    objective["description"]
+    "今回の5問では、動名詞の形や、"
+    "like・enjoy・finish の後ろでの使い方を確認します。"
 )
 
 
 # =========================================================
-# 問題
+# 問題セット
 # =========================================================
 
 
 st.markdown(
-    "### 📌 問題"
+    "---"
 )
-
-st.caption(
-    "問題形式：空欄補充・4択"
-)
-
-st.info(
-    question["question"]
-)
-
-
-# =========================================================
-# 選択肢
-# =========================================================
-
 
 st.markdown(
-    "#### 選択肢"
+    f"## 📝 第{st.session_state.batch_number + 1}セット"
 )
 
-for option in question["options"]:
-
-    st.write(
-        f"**{option['label']}．** "
-        f"{option['value']}"
-    )
-
-
 st.caption(
-    "答えは「ア・イ・ウ・エ」の記号で入力してください。"
+    f"{len(current_questions)}問"
 )
 
 
 # =========================================================
-# 回答
+# 回答フォーム
 # =========================================================
 
 
 with st.form(
-    "answer_form"
+    f"batch_form_{st.session_state.batch_number}"
 ):
 
-    user_answer = st.text_input(
-        "あなたの答え",
-        placeholder="例：イ",
-    )
+    answer_inputs = {}
 
-    submit_button = (
+    for index, question in enumerate(
+        current_questions,
+        start=1,
+    ):
+
+        st.markdown(
+            f"### 第{index}問"
+        )
+
+        st.caption(
+            "問題形式：空欄補充・4択"
+        )
+
+        st.info(
+            question["question"]
+        )
+
+        # -------------------------------------------------
+        # 選択肢
+        # -------------------------------------------------
+
+        for option in question[
+            "options"
+        ]:
+
+            st.write(
+                f"**{option['label']}．** "
+                f"{option['value']}"
+            )
+
+        # -------------------------------------------------
+        # 回答欄
+        # -------------------------------------------------
+        #
+        # 重要：
+        # placeholder は設定しない。
+        #
+        # 回答欄には何も表示しない。
+        #
+
+        answer_inputs[
+            question["id"]
+        ] = st.text_input(
+            "あなたの答え",
+            key=(
+                f"answer_"
+                f"{st.session_state.batch_number}_"
+                f"{question['id']}"
+            ),
+        )
+
+        if index < len(
+            current_questions
+        ):
+
+            st.markdown("---")
+
+    # -----------------------------------------------------
+    # 5問まとめて採点
+    # -----------------------------------------------------
+
+    submit_batch = (
         st.form_submit_button(
-            "回答する 🚀",
+            "5問をまとめて採点する 📝",
             type="primary",
         )
     )
 
 
 # =========================================================
-# 回答処理
+# 一括採点
 # =========================================================
 
 
-if submit_button:
+if submit_batch:
 
-    if not user_answer.strip():
+    st.session_state.student_answers = (
+        answer_inputs
+    )
 
-        st.warning(
-            "答えを入力してください。"
+    batch_results = evaluate_batch(
+        current_questions,
+        answer_inputs,
+    )
+
+    st.session_state.batch_results = (
+        batch_results
+    )
+
+    st.session_state.batch_submitted = (
+        True
+    )
+
+    # -----------------------------------------------------
+    # 学習履歴へ追加
+    # -----------------------------------------------------
+
+    for item in batch_results:
+
+        history_record = (
+            create_history_record(
+                item["question"],
+                item["user_answer"],
+                item["result"],
+            )
         )
 
-    else:
+        st.session_state.history.append(
+            history_record
+        )
 
-        try:
-
-            result = check_answer(
-                question,
-                user_answer,
-            )
-
-            history_record = (
-                create_history_record(
-                    question,
-                    user_answer,
-                    result,
-                )
-            )
-
-            st.session_state.history.append(
-                history_record
-            )
-
-            st.session_state.feedback = (
-                result
-            )
-
-            st.session_state.last_result = (
-                result
-            )
-
-            st.session_state.next_ready = (
-                True
-            )
-
-            st.rerun()
-
-        except Exception as e:
-
-            st.error(
-                "回答の判定中にエラーが発生しました。"
-            )
-
-            with st.expander(
-                "🔧 エラー詳細"
-            ):
-
-                st.code(
-                    str(e),
-                    language="text",
-                )
+    st.rerun()
 
 
 # =========================================================
-# フィードバック
+# 今回の5問の結果
 # =========================================================
-
-
-feedback_data = (
-    st.session_state.get(
-        "feedback"
-    )
-)
 
 
 if (
-    isinstance(
-        feedback_data,
-        dict,
-    )
-    and "is_correct"
-    in feedback_data
+    st.session_state.batch_submitted
+    and st.session_state.batch_results
 ):
 
-    result = feedback_data
-
-    st.markdown("---")
-
-    if result.get(
-        "is_correct",
-        False,
-    ):
-
-        st.success(
-            "🟢 正解です！"
-        )
-
-    else:
-
-        st.error(
-            "🔴 不正解です。"
-        )
-
-    st.markdown(
-        "### 🔍 解説"
+    batch_results = (
+        st.session_state.batch_results
     )
-
-    st.write(
-        result.get(
-            "feedback",
-            "",
-        )
-    )
-
-    # -----------------------------------------------------
-    # 不正解の場合
-    # -----------------------------------------------------
-
-    if not result.get(
-        "is_correct",
-        False,
-    ):
-
-        correct_option = (
-            get_option_by_label(
-                question,
-                question["answer"],
-            )
-        )
-
-        if correct_option:
-
-            st.markdown(
-                "### 📖 正解"
-            )
-
-            st.write(
-                f"**{correct_option['label']}．"
-                f"{correct_option['value']}**"
-            )
-
-
-# =========================================================
-# 次の問題
-# =========================================================
-
-
-if st.session_state.get(
-    "next_ready",
-    False,
-):
-
-    st.markdown("---")
-
-    if st.button(
-        "次の問題へ ➡️",
-        type="primary",
-    ):
-
-        next_question = (
-            select_next_question()
-        )
-
-        st.session_state.current_question_id = (
-            next_question["id"]
-        )
-
-        st.session_state.feedback = None
-
-        st.session_state.last_result = None
-
-        st.session_state.next_ready = False
-
-        st.rerun()
-
-
-# =========================================================
-# 学習状況
-# =========================================================
-
-
-if st.session_state.history:
 
     st.markdown("---")
 
     st.markdown(
-        "## 📊 学習状況"
+        "## 📊 今回の5問の結果"
     )
 
-    stats = (
-        calculate_objective_stats()
+    batch_total = len(
+        batch_results
     )
 
-    total_questions = len(
-        st.session_state.history
-    )
-
-    total_correct = sum(
+    batch_correct = sum(
         1
-        for record
-        in st.session_state.history
-        if record.get(
+        for item
+        in batch_results
+        if item["result"].get(
             "is_correct",
             False,
         )
     )
 
-    overall_accuracy = (
-        total_correct
-        / total_questions
+    batch_accuracy = (
+        batch_correct
+        / batch_total
         * 100
-        if total_questions > 0
+        if batch_total > 0
         else 0
     )
 
@@ -1330,22 +1415,253 @@ if st.session_state.history:
     with col1:
 
         st.metric(
-            "解答数",
-            f"{total_questions}問",
+            "問題数",
+            f"{batch_total}問",
         )
 
     with col2:
 
         st.metric(
-            "正解数",
-            f"{total_correct}問",
+            "正解",
+            f"{batch_correct}問",
         )
 
     with col3:
 
         st.metric(
             "正答率",
-            f"{overall_accuracy:.1f}%",
+            f"{batch_accuracy:.1f}%",
+        )
+
+
+    # -----------------------------------------------------
+    # 各問題の結果
+    # -----------------------------------------------------
+
+    st.markdown(
+        "### 🔍 各問題の結果"
+    )
+
+    for index, item in enumerate(
+        batch_results,
+        start=1,
+    ):
+
+        question = item[
+            "question"
+        ]
+
+        result = item[
+            "result"
+        ]
+
+        user_answer = item[
+            "user_answer"
+        ]
+
+        if result.get(
+            "is_correct",
+            False,
+        ):
+
+            st.success(
+                f"第{index}問　🟢 正解"
+            )
+
+        elif result.get(
+            "mistake_type"
+        ) == "unanswered":
+
+            st.warning(
+                f"第{index}問　⚪ 未回答"
+            )
+
+        else:
+
+            st.error(
+                f"第{index}問　🔴 不正解"
+            )
+
+        st.write(
+            f"あなたの答え："
+            f"「{user_answer}」"
+        )
+
+        correct_option = (
+            get_option_by_label(
+                question,
+                question["answer"],
+            )
+        )
+
+        if correct_option:
+
+            st.write(
+                f"正解："
+                f"**{correct_option['label']}．"
+                f"{correct_option['value']}**"
+            )
+
+        st.write(
+            result.get(
+                "feedback",
+                "",
+            )
+        )
+
+        if index < len(
+            batch_results
+        ):
+
+            st.markdown("---")
+
+
+    # =====================================================
+    # 今回の5問の誤答分析
+    # =====================================================
+
+    st.markdown(
+        "### 🔎 今回の5問の誤答傾向"
+    )
+
+    batch_mistakes = {}
+
+    for item in batch_results:
+
+        result = item[
+            "result"
+        ]
+
+        if result.get(
+            "is_correct",
+            False,
+        ):
+
+            continue
+
+        mistake_type = result.get(
+            "mistake_type",
+            "other",
+        )
+
+        batch_mistakes[
+            mistake_type
+        ] = (
+            batch_mistakes.get(
+                mistake_type,
+                0,
+            )
+            + 1
+        )
+
+    if not batch_mistakes:
+
+        st.success(
+            "今回の5問では誤答はありませんでした。"
+        )
+
+    else:
+
+        for (
+            mistake_type,
+            count,
+        ) in sorted(
+            batch_mistakes.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        ):
+
+            st.write(
+                f"- `{mistake_type}`："
+                f"{count}問"
+            )
+
+
+    # =====================================================
+    # 次の5問
+    # =====================================================
+
+    if (
+        st.session_state.batch_number
+        < (
+            len(QUESTION_BANK)
+            // QUESTIONS_PER_BATCH
+        )
+        - 1
+    ):
+
+        st.markdown("---")
+
+        if st.button(
+            "次の5問へ ➡️",
+            type="primary",
+        ):
+
+            st.session_state.batch_number += 1
+
+            st.session_state.batch_results = (
+                None
+            )
+
+            st.session_state.batch_submitted = (
+                False
+            )
+
+            st.session_state.student_answers = (
+                {}
+            )
+
+            st.rerun()
+
+    else:
+
+        st.markdown("---")
+
+        st.success(
+            "現在用意されている問題はすべて終了しました。"
+        )
+
+
+# =========================================================
+# 全体の学習状況
+# =========================================================
+
+
+if st.session_state.history:
+
+    st.markdown("---")
+
+    st.markdown(
+        "## 📈 学習状況"
+    )
+
+    overall_stats = (
+        calculate_overall_stats()
+    )
+
+    col1, col2, col3 = (
+        st.columns(3)
+    )
+
+    with col1:
+
+        st.metric(
+            "解答数",
+            f"{overall_stats['total']}問",
+        )
+
+    with col2:
+
+        st.metric(
+            "正解数",
+            f"{overall_stats['correct']}問",
+        )
+
+    with col3:
+
+        st.metric(
+            "全体正答率",
+            f"{overall_stats['accuracy']:.1f}%",
         )
 
 
@@ -1354,13 +1670,17 @@ if st.session_state.history:
     # -----------------------------------------------------
 
     st.markdown(
-        "### 🎯 学習目標別の学習状況"
+        "### 🎯 学習目標別"
+    )
+
+    objective_stats = (
+        calculate_objective_stats()
     )
 
     for (
         objective_id,
         stat,
-    ) in stats.items():
+    ) in objective_stats.items():
 
         if stat["total"] == 0:
 
@@ -1386,6 +1706,35 @@ if st.session_state.history:
 
 
     # -----------------------------------------------------
+    # 全体の誤答傾向
+    # -----------------------------------------------------
+
+    mistake_stats = (
+        calculate_mistake_stats()
+    )
+
+    if mistake_stats:
+
+        st.markdown(
+            "### 🔎 全体の誤答傾向"
+        )
+
+        for (
+            mistake_type,
+            count,
+        ) in sorted(
+            mistake_stats.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        ):
+
+            st.write(
+                f"- `{mistake_type}`："
+                f"{count}問"
+            )
+
+
+    # -----------------------------------------------------
     # 詳細履歴
     # -----------------------------------------------------
 
@@ -1403,14 +1752,6 @@ if st.session_state.history:
             1,
         ):
 
-            question_number = (
-                len(
-                    st.session_state.history
-                )
-                - index
-                + 1
-            )
-
             if record.get(
                 "is_correct",
                 False,
@@ -1418,13 +1759,24 @@ if st.session_state.history:
 
                 status = "🟢 正解"
 
+            elif record.get(
+                "mistake_type"
+            ) == "unanswered":
+
+                status = "⚪ 未回答"
+
             else:
 
                 status = "🔴 不正解"
 
             st.markdown(
-                f"**第{question_number}問** "
+                f"**第{index}問** "
                 f"{status}"
+            )
+
+            st.caption(
+                f"セット："
+                f"{record.get('batch_number', 0) + 1}"
             )
 
             st.caption(
@@ -1433,12 +1785,7 @@ if st.session_state.history:
             )
 
             st.text(
-                f"問題：\n"
-                f"{record.get('question', '')}"
-            )
-
-            st.text(
-                f"あなたの回答：\n"
+                f"あなたの回答："
                 f"{record.get('user_answer', '')}"
             )
 
@@ -1448,6 +1795,11 @@ if st.session_state.history:
                 f"（"
                 f"{record.get('correct_value', '')}"
                 f"）"
+            )
+
+            st.caption(
+                f"誤答タイプ："
+                f"{record.get('mistake_type', '')}"
             )
 
             st.caption(
@@ -1557,18 +1909,18 @@ with st.expander(
     )
 
     st.write(
-        f"現在の問題形式："
-        f"{question['question_type']}"
+        f"現在のセット："
+        f"{st.session_state.batch_number + 1}"
     )
 
     st.write(
-        f"問題数："
+        f"1セットの問題数："
+        f"{QUESTIONS_PER_BATCH}問"
+    )
+
+    st.write(
+        f"登録問題数："
         f"{len(QUESTION_BANK)}問"
-    )
-
-    st.write(
-        f"学習目標数："
-        f"{len(LEARNING_OBJECTIVES)}"
     )
 
     st.write(
@@ -1584,6 +1936,14 @@ with st.expander(
     )
 
     st.write(
+        "回答欄：プレースホルダーなし"
+    )
+
+    st.write(
+        "採点：5問一括"
+    )
+
+    st.write(
         "AI問題生成：使用しない"
     )
 
@@ -1593,10 +1953,6 @@ with st.expander(
 
     st.write(
         "正誤判定：Python"
-    )
-
-    st.write(
-        "次問題選択：固定順"
     )
 
     st.write(
