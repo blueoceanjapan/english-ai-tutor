@@ -348,6 +348,7 @@ def create_history_record(
     question,
     user_answer,
     result,
+    batch_question_number,
 ):
 
     objective_id = question[
@@ -388,9 +389,13 @@ def create_history_record(
             "major_question"
         ],
 
+        # question_number は45問ストック全体の管理番号として保持する。
         "question_number": question[
             "question_number"
         ],
+
+        # batch_question_number は、今回の5問セット内の表示番号。
+        "batch_question_number": batch_question_number,
 
         "question_id": question[
             "id"
@@ -508,8 +513,8 @@ def history_sort_key(
 
         question_number = int(
             record.get(
-                "question_number",
-                0,
+                "batch_question_number",
+                record.get("question_number", 0),
             )
         )
 
@@ -775,8 +780,9 @@ def create_session_copy_text(
 
         lines.extend([
             "",
-            f"第{record.get('question_number', '')}問",
+            f"第{record.get('batch_question_number', record.get('question_number', ''))}問",
             f"セット：{record.get('batch_number', '')}",
+            f"ストック番号：{record.get('question_number', '')}",
             f"問題ID：{record.get('question_id', '')}",
             f"学習項目：{record.get('objective_name', '')}",
             f"難易度：{record.get('difficulty', '')}",
@@ -985,12 +991,12 @@ with st.form(
         start=1,
     ):
 
-        global_question_number = question[
-            "question_number"
-        ]
+        # 表示上の番号は、現在の5問セット内で1～5とする。
+        # QUESTION_BANK の question_number はストック管理用として別に保持する。
+        batch_question_number = index
 
         st.markdown(
-            f"### 第{global_question_number}問"
+            f"### 第{batch_question_number}問"
         )
 
         st.write(
@@ -1074,13 +1080,17 @@ if submit_batch:
         True
     )
 
-    for item in batch_results:
+    for index, item in enumerate(
+        batch_results,
+        start=1,
+    ):
 
         st.session_state.history.append(
             create_history_record(
                 item["question"],
                 item["user_answer"],
                 item["result"],
+                index,
             )
         )
 
@@ -1179,7 +1189,7 @@ if (
         ):
 
             st.success(
-                f"{question['question_number']}. "
+                f"{index}. "
                 f"🟢 正解"
             )
 
@@ -1188,14 +1198,14 @@ if (
         ) == "unanswered":
 
             st.warning(
-                f"{question['question_number']}. "
+                f"{index}. "
                 f"⚪ 未回答"
             )
 
         else:
 
             st.error(
-                f"{question['question_number']}. "
+                f"{index}. "
                 f"🔴 不正解"
             )
 
@@ -1446,7 +1456,12 @@ if st.session_state.history:
 
         for record in sorted_history:
 
-            question_number = record.get(
+            batch_question_number = record.get(
+                "batch_question_number",
+                record.get("question_number", ""),
+            )
+
+            stock_question_number = record.get(
                 "question_number",
                 "",
             )
@@ -1481,7 +1496,7 @@ if st.session_state.history:
                 status = "🔴 不正解"
 
             st.markdown(
-                f"### 第{question_number}問 "
+                f"### 第{batch_question_number}問 "
                 f"{status}"
             )
 
@@ -1491,6 +1506,7 @@ if st.session_state.history:
                 f"　"
                 f"セット："
                 f"{batch_number}"
+                f"　ストック番号：{stock_question_number}"
             )
 
             st.caption(
