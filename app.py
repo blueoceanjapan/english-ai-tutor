@@ -14,7 +14,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.5.2"
+APP_VERSION = "1.5.3"
 STATE_VERSION = 7
 QUESTIONS_PER_BATCH = 5
 
@@ -67,8 +67,9 @@ QUESTION_BANK = [
         ],
         "answer": "イ",
         "explanation": (
-            "「泳ぐこと」を表す動名詞は、"
-            "swim に -ing を付けた swimming です。"
+            "日本語の「泳ぐこと」は、動詞 swim の動作を「～すること」として表しています。"
+            "「～すること」を表すときは動名詞（～ing）を使うので、"
+            "swim → swimming となります。"
         ),
     },
 
@@ -89,8 +90,9 @@ QUESTION_BANK = [
         ],
         "answer": "ア",
         "explanation": (
-            "今回の学習目標では、"
-            "like の後ろに動名詞 playing を使います。"
+            "日本語の「テニスをすること」の「すること」は、動詞 play の動作を表しています。"
+            "また、like の後ろでは動名詞（～ing）を使うので、"
+            "play → playing となります。"
         ),
     },
 
@@ -111,7 +113,8 @@ QUESTION_BANK = [
         ],
         "answer": "ウ",
         "explanation": (
-            "like の後ろに動名詞を使うので、"
+            "日本語の「音楽を聴くこと」の「聴くこと」は、動詞 listen の動作を表しています。"
+            "また、like の後ろでは動名詞（～ing）を使うので、"
             "listen → listening となります。"
         ),
     },
@@ -133,7 +136,9 @@ QUESTION_BANK = [
         ],
         "answer": "イ",
         "explanation": (
-            "enjoy の後ろに動名詞 studying を使います。"
+            "日本語の「英語を勉強すること」の「すること」は、動詞 study の動作を表しています。"
+            "また、enjoy の後ろでは動名詞（～ing）を使うので、"
+            "study → studying となります。"
         ),
     },
 
@@ -154,7 +159,9 @@ QUESTION_BANK = [
         ],
         "answer": "エ",
         "explanation": (
-            "finish の後ろに動名詞 doing を使います。"
+            "日本語の「宿題を終えました」では、「宿題をすること」を表す動詞 do が使われています。"
+            "また、finish の後ろでは動名詞（～ing）を使うので、"
+            "do → doing となります。"
         ),
     },
 
@@ -175,7 +182,9 @@ QUESTION_BANK = [
         ],
         "answer": "エ",
         "explanation": (
-            "「絵を描くこと」は動名詞 drawing で表します。"
+            "日本語の「絵を描くこと」の「描くこと」は、動詞 draw の動作を表しています。"
+            "「～すること」を表すときは動名詞（～ing）を使うので、"
+            "draw → drawing となります。"
         ),
     },
 
@@ -196,7 +205,9 @@ QUESTION_BANK = [
         ],
         "answer": "ア",
         "explanation": (
-            "like の後ろに動名詞 reading を使います。"
+            "日本語の「本を読むこと」の「読むこと」は、動詞 read の動作を表しています。"
+            "また、like の後ろでは動名詞（～ing）を使うので、"
+            "read → reading となります。"
         ),
     },
 
@@ -217,7 +228,9 @@ QUESTION_BANK = [
         ],
         "answer": "エ",
         "explanation": (
-            "enjoy の後ろに動名詞 cooking を使います。"
+            "日本語の「料理をすること」の「すること」は、動詞 cook の動作を表しています。"
+            "また、enjoy の後ろでは動名詞（～ing）を使うので、"
+            "cook → cooking となります。"
         ),
     },
 
@@ -238,7 +251,9 @@ QUESTION_BANK = [
         ],
         "answer": "イ",
         "explanation": (
-            "finish の後ろに動名詞 eating を使います。"
+            "日本語の「昼食を食べ終えました」では、「食べること」を表す動詞 eat が使われています。"
+            "また、finish の後ろでは動名詞（～ing）を使うので、"
+            "eat → eating となります。"
         ),
     },
 
@@ -259,8 +274,9 @@ QUESTION_BANK = [
         ],
         "answer": "ア",
         "explanation": (
-            "「英語を勉強すること」を文の主語として使うため、"
-            "動名詞 Studying を使います。"
+            "日本語の「英語を勉強すること」は、英語では文の主語として使われています。"
+            "「～すること」を主語として表すときは動名詞（～ing）を使うので、"
+            "study → Studying となります。"
         ),
     },
 ]
