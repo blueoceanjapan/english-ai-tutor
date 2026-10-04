@@ -126,3 +126,13 @@ with st.expander(
 
     st.write(
         "正誤判定：Python"
+    )
+
+    st.write(
+        "誤答タイプ：内部データとして保存"
+    )
+
+    st.write(
+        "学習履歴："
+        "Streamlitセッション＋JSON"
+    )
