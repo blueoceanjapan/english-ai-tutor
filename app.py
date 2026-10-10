@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta24"
+APP_VERSION = "1.6.0-beta25"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2616,7 +2616,10 @@ if (
     # iframe内ボタンから呼び出すStreamlit側の遷移ボタンは画面上では隠す。
     st.markdown(
         """<style>
-        div[data-testid="stButton"]:last-of-type { display: none !important; }
+        /* 内部処理用ボタンだけを非表示にし、学習者向けボタンは隠さない */
+        div[data-testid="stButton"]:has(button[kind="secondary"][aria-label="レベル選択へ戻る"]) {
+            display: none !important;
+        }
         </style>""",
         unsafe_allow_html=True,
     )
