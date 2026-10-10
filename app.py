@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta17"
+APP_VERSION = "1.6.0-beta18"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2438,75 +2438,10 @@ if (
             pass
     today_last_submit = max(today_submit_candidates).isoformat(timespec="milliseconds") if today_submit_candidates else None
 
-    def render_today_copy_button():
-        # iframe内のJavaScriptクリップボード操作は、端末・ブラウザ設定により
-        # 失敗してもStreamlit側で検知できないため、ネイティブのダウンロード機能に変更。
-        report_text = create_session_copy_text(
-            today_records,
-            session_started_at=today_session_start,
-            session_ended_at=today_last_submit,
-        )
-        st.download_button(
-            label="学習ログを保存する",
-            data=report_text,
-            file_name=f"english_drill_learning_log_{datetime.now(ZoneInfo('Asia/Tokyo')).strftime('%Y%m%d_%H%M%S')}.txt",
-            mime="text/plain; charset=utf-8",
-            use_container_width=True,
-            key=f"download_today_report_{st.session_state.get('learning_session_id', 'no_session')}_{len(today_records)}",
-            help="テキストファイルとして保存します。保存したファイルを開いて、学習ログを確認できます。",
-        )
-
-    if batch_is_perfect:
-        st.success(f"{current_questions[0]['level_name']}のこのセットは満点です。")
-        if current_level < 3:
-            progress_col, copy_col = st.columns([1, 1])
-            with progress_col:
-                if st.button(f"レベル{current_level + 1}へ進む ➡️", type="primary", use_container_width=True):
-                    st.session_state.current_level = current_level + 1
-                    st.session_state.level_batch_number = 0
-                    st.session_state.batch_results = None
-                    st.session_state.batch_submitted = False
-                    st.session_state.batch_number += 1
-                    st.session_state.scroll_to_top = True
-                    st.rerun()
-            with copy_col:
-                render_today_copy_button()
-        else:
-            st.success("レベル3で満点を達成しました。動名詞を使う問題に、最後まで取り組めました。")
-            render_today_copy_button()
-    else:
-        st.warning(f"{current_questions[0]['level_name']}は満点ではありません。次のレベルへは進みません。")
-        retry_col, copy_col = st.columns([1, 1])
-        with retry_col:
-            if st.button("もう一度頑張ってみる", type="primary", use_container_width=True):
-                next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
-                if next_offset < len(current_level_questions):
-                    st.session_state.level_batch_number += 1
-                else:
-                    # 全問題を一巡した場合は順番を組み替え、直前と同じ5問セットを避ける。
-                    previous_ids = set(st.session_state.get("last_batch_question_ids", []))
-                    ids = make_question_order(current_level)
-                    for _ in range(30):
-                        if set(ids[:QUESTIONS_PER_BATCH]) != previous_ids:
-                            break
-                        ids = make_question_order(current_level)
-                    st.session_state.question_order_by_level[str(current_level)] = ids
-                    st.session_state.level_batch_number = 0
-                st.session_state.batch_number += 1
-                st.session_state.batch_results = None
-                st.session_state.batch_submitted = False
-                st.session_state.active_batch_key = None
-                st.session_state.batch_started_at = None
-                st.session_state.scroll_to_top = True
-                st.rerun()
-        with copy_col:
-            render_today_copy_button()
-
-    st.markdown("")
-    if st.button("レベルを選ぶ"):
-        # ポップアップは表示せず、学習者が直接レベル選択画面へ戻れるようにする。
-        # 学習ログは「学習ログを保存する」ボタンで、戻る前に必要に応じてコピーする。
-        st.session_state.show_log_copy_before_level_select = False
+    def return_to_level_selection_after_save():
+        # Streamlit の download_button の on_click callback で実行。
+        # ダウンロード開始と同じ操作で学習画面の状態をリセットする。
+        st.session_state.show_log_save_dialog = False
         st.session_state.learning_started = False
         st.session_state.session_started_at = None
         st.session_state.session_ended_at = None
@@ -2515,7 +2450,73 @@ if (
         st.session_state.batch_submitted = False
         st.session_state.active_batch_key = None
         st.session_state.batch_started_at = None
+
+    def render_save_log_dialog():
+        report_text = create_session_copy_text(
+            today_records,
+            session_started_at=today_session_start,
+            session_ended_at=today_last_submit,
+        )
+
+        @st.dialog("学習履歴を保存")
+        def save_log_dialog():
+            # ダイアログ内には保存ボタンのみ配置。
+            # 保存操作の callback で学習履歴を保存対象にし、レベル選択へ戻す。
+            st.download_button(
+                label="ほぞんする",
+                data=report_text,
+                file_name=f"english_drill_learning_log_{datetime.now(ZoneInfo('Asia/Tokyo')).strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain; charset=utf-8",
+                use_container_width=True,
+                key=f"download_today_report_{st.session_state.get('learning_session_id', 'no_session')}_{len(today_records)}",
+                on_click=return_to_level_selection_after_save,
+            )
+        save_log_dialog()
+
+    if batch_is_perfect:
+        st.success(f"{current_questions[0]['level_name']}のこのセットは満点です。")
+        if current_level < 3:
+            if st.button(f"レベル{current_level + 1}へ進む ➡️", type="primary", use_container_width=True):
+                st.session_state.current_level = current_level + 1
+                st.session_state.level_batch_number = 0
+                st.session_state.batch_results = None
+                st.session_state.batch_submitted = False
+                st.session_state.batch_number += 1
+                st.session_state.scroll_to_top = True
+                st.rerun()
+        else:
+            st.success("レベル3で満点を達成しました。動名詞を使う問題に、最後まで取り組めました。")
+    else:
+        st.warning(f"{current_questions[0]['level_name']}は満点ではありません。次のレベルへは進みません。")
+        if st.button("もう一度頑張ってみる", type="primary", use_container_width=True):
+            next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
+            if next_offset < len(current_level_questions):
+                st.session_state.level_batch_number += 1
+            else:
+                # 全問題を一巡した場合は順番を組み替え、直前と同じ5問セットを避ける。
+                previous_ids = set(st.session_state.get("last_batch_question_ids", []))
+                ids = make_question_order(current_level)
+                for _ in range(30):
+                    if set(ids[:QUESTIONS_PER_BATCH]) != previous_ids:
+                        break
+                    ids = make_question_order(current_level)
+                st.session_state.question_order_by_level[str(current_level)] = ids
+                st.session_state.level_batch_number = 0
+            st.session_state.batch_number += 1
+            st.session_state.batch_results = None
+            st.session_state.batch_submitted = False
+            st.session_state.active_batch_key = None
+            st.session_state.batch_started_at = None
+            st.session_state.scroll_to_top = True
+            st.rerun()
+
+    st.markdown("")
+    if st.button("レベルを選ぶ"):
+        st.session_state.show_log_save_dialog = True
         st.rerun()
+
+    if st.session_state.get("show_log_save_dialog", False):
+        render_save_log_dialog()
 
 
 # =========================================================
