@@ -1,7 +1,16 @@
 import json
+import random
+import uuid
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import streamlit as st
+
+JAPAN_TZ = ZoneInfo("Asia/Tokyo")
+
+def now_japan():
+    """日本時間の現在日時を返す。"""
+    return datetime.now(JAPAN_TZ)
 
 
 # =========================================================
@@ -14,8 +23,8 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta5"
-STATE_VERSION = 10
+APP_VERSION = "1.6.0-beta6"
+STATE_VERSION = 11
 QUESTIONS_PER_BATCH = 5
 
 CHOICE_LABELS = ["ア", "イ", "ウ", "エ"]
@@ -963,6 +972,38 @@ LEVEL0_QUESTION_BANK = [
 
 QUESTION_BANK = LEVEL0_QUESTION_BANK + QUESTION_BANK
 
+
+def make_question_order(level):
+    """レベルごとの問題順を作る。レベル3は各5問に-ing以外の正解を2問入れる。"""
+    questions = [q for q in QUESTION_BANK if q.get("level") == level]
+    if level == 3:
+        non_ing = []
+        ing = []
+        for question in questions:
+            correct_option = next(
+                (option for option in question["options"] if option["label"] == question["answer"]),
+                None,
+            )
+            value = str(correct_option.get("value", "")) if correct_option else ""
+            if not value.lower().endswith("ing"):
+                non_ing.append(question["id"])
+            else:
+                ing.append(question["id"])
+        random.shuffle(non_ing)
+        random.shuffle(ing)
+        ordered_ids = []
+        while non_ing or ing:
+            batch = non_ing[:2] + ing[:3]
+            del non_ing[:2]
+            del ing[:3]
+            random.shuffle(batch)
+            ordered_ids.extend(batch)
+        return ordered_ids
+
+    ids = [q["id"] for q in questions]
+    random.shuffle(ids)
+    return ids
+
 # =========================================================
 
 def initialize_state():
@@ -980,6 +1021,10 @@ def initialize_state():
     st.session_state.setdefault("learning_started", False)
     st.session_state.setdefault("selected_start_level", 0)
     st.session_state.setdefault("session_started_at", None)
+    st.session_state.setdefault("session_ended_at", None)
+    st.session_state.setdefault("learning_session_id", None)
+    st.session_state.setdefault("question_order_by_level", {})
+    st.session_state.setdefault("last_batch_question_ids", [])
     st.session_state.setdefault("batch_started_at", None)
     st.session_state.setdefault("active_batch_key", None)
     st.session_state.setdefault("attempt_counts", {})
@@ -1268,9 +1313,10 @@ def create_history_record(
     )
 
     if submitted_at is None:
-        submitted_at = datetime.now().astimezone()
+        submitted_at = now_japan()
 
     return {
+        "learning_session_id": st.session_state.get("learning_session_id"),
         "timestamp": submitted_at.isoformat(timespec="seconds"),
         "session_started_at": st.session_state.get("session_started_at"),
         "batch_started_at": st.session_state.get("batch_started_at"),
@@ -1564,6 +1610,8 @@ def calculate_batch_mistake_stats(
 
 def create_session_copy_text(
     records,
+    session_started_at=None,
+    session_ended_at=None,
 ):
 
     if not records:
@@ -1593,6 +1641,8 @@ def create_session_copy_text(
         "other": "その他",
         "invalid_answer": "無効な回答",
         "unanswered": "未回答",
+        "action_only": "「～こと」が付かない形を選んだ",
+        "gerund": "動名詞の形を選んだ",
     }
 
     mistake_counts = {}
@@ -1627,14 +1677,38 @@ def create_session_copy_text(
             mistake_counts.get(mistake_type, 0) + 1
         )
 
-    first_timestamp = records[0].get("timestamp", "")
-    last_timestamp = records[-1].get("timestamp", "")
+    if not session_started_at:
+        session_started_at = next((r.get("session_started_at") for r in records if r.get("session_started_at")), "")
+    submitted_values = [r.get("submitted_at") or r.get("timestamp", "") for r in records]
+    parsed_submissions = []
+    for value in submitted_values:
+        if not value:
+            continue
+        try:
+            parsed_submissions.append((datetime.fromisoformat(value), value))
+        except (TypeError, ValueError):
+            continue
+    last_timestamp = max(parsed_submissions, key=lambda item: item[0])[1] if parsed_submissions else ""
+    try:
+        started_dt = datetime.fromisoformat(session_started_at) if session_started_at else None
+    except (TypeError, ValueError):
+        started_dt = None
+    try:
+        ended_dt = datetime.fromisoformat(session_ended_at) if session_ended_at else None
+    except (TypeError, ValueError):
+        ended_dt = None
+    try:
+        last_submit_dt = datetime.fromisoformat(last_timestamp) if last_timestamp else None
+    except (TypeError, ValueError):
+        last_submit_dt = None
 
     lines = [
-        "【中2英語 個別学習支援ドリル｜現在の学習セッション結果】",
-        "※現在のStreamlitセッション内で記録された全問題を対象としています。",
-        f"実施開始時刻（記録上）：{first_timestamp}",
-        f"直近記録時刻（記録上）：{last_timestamp}",
+        "【中2英語 個別学習支援ドリル｜今回の学習結果】",
+        "※今回の学習開始後に記録された問題を対象としています。",
+        f"学習開始日時：{session_started_at or '記録なし'}",
+        f"最終採点日時：{last_timestamp or '記録なし'}",
+        f"学習終了日時：{session_ended_at or '未終了（「学習を終了する」を押すと記録されます）'}",
+        (f"学習開始から終了まで：{max(0, (ended_dt - started_dt).total_seconds()):.1f}秒" if ended_dt and started_dt else (f"学習開始から最終採点まで：{max(0, (last_submit_dt - started_dt).total_seconds()):.1f}秒" if last_submit_dt and started_dt else "所要時間：算出できません")),
         f"問題数：{total}問",
         f"正解：{correct}問",
         f"正答率：{accuracy:.1f}%",
@@ -1683,6 +1757,7 @@ def create_session_copy_text(
             f"セット：{record.get('batch_number', '')}",
             f"ストック番号：{record.get('question_number', '')}",
             f"問題ID：{record.get('question_id', '')}",
+            f"レベル：{record.get('level_name') or ('レベル' + str(record.get('level', '')) if record.get('level', '') != '' else '記録なし')}",
             f"学習項目：{record.get('objective_name', '')}",
             f"難易度：{record.get('difficulty', '')}",
             f"日本語：{record.get('japanese', '')}",
@@ -1696,7 +1771,7 @@ def create_session_copy_text(
 
     lines.extend([
         "",
-        "【セッション全体の誤答内訳】",
+        "【今回まちがえたこと】",
     ])
 
     if not mistake_counts:
@@ -1734,9 +1809,7 @@ def create_export_data():
 
             "state_version": STATE_VERSION,
 
-            "exported_at": datetime.now().isoformat(
-                timespec="seconds"
-            ),
+            "exported_at": now_japan().isoformat(timespec="seconds"),
 
             "student_name": (
                 st.session_state.student_name
@@ -1805,18 +1878,23 @@ def import_history(
 # =========================================================
 
 current_level = st.session_state.get("current_level", 1)
-current_level_questions = [q for q in QUESTION_BANK if q.get("level") == current_level]
+question_by_id = {q["id"]: q for q in QUESTION_BANK}
+level_order = st.session_state.get("question_order_by_level", {}).get(str(current_level))
+if level_order:
+    current_level_questions = [question_by_id[qid] for qid in level_order if qid in question_by_id]
+else:
+    current_level_questions = [q for q in QUESTION_BANK if q.get("level") == current_level]
 level_offset = st.session_state.get("level_batch_number", 0) * QUESTIONS_PER_BATCH
 current_questions = current_level_questions[level_offset:level_offset + QUESTIONS_PER_BATCH]
 
 # セットが切り替わった時点で開始時刻を記録する。
 active_batch_key = f"{current_level}:{st.session_state.get('level_batch_number', 0)}"
 if st.session_state.get("active_batch_key") != active_batch_key:
-    now = datetime.now().astimezone()
+    now = now_japan()
     st.session_state.active_batch_key = active_batch_key
     st.session_state.batch_started_at = now.isoformat(timespec="seconds")
 if st.session_state.get("session_started_at") is None and st.session_state.get("learning_started"):
-    st.session_state.session_started_at = datetime.now().astimezone().isoformat(timespec="seconds")
+    st.session_state.session_started_at = now_japan().isoformat(timespec="seconds")
 
 # レベル外の問題が混入していないかを実行時にも確認します。
 if current_questions and any(q.get("level") != current_level for q in current_questions):
@@ -1831,6 +1909,9 @@ if current_questions and any(q.get("level") != current_level for q in current_qu
 st.title(
     "📚 中2英語 個別学習支援ドリル"
 )
+
+if st.session_state.get("session_ended_at"):
+    st.info("この学習は終了しました。学習結果を確認・保存できます。新しい学習を始める場合は、学習データ欄の「新しい学習を始める」を押してください。")
 
 if not st.session_state.learning_started:
     st.markdown("## 学習を始めよう")
@@ -1852,8 +1933,15 @@ if not st.session_state.learning_started:
         st.session_state.level_batch_number = 0
         st.session_state.batch_number = 0
         st.session_state.student_name = st.session_state.get("student_name_input", "")
-        now = datetime.now().astimezone()
+        now = now_japan()
         st.session_state.session_started_at = now.isoformat(timespec="seconds")
+        st.session_state.session_ended_at = None
+        st.session_state.learning_session_id = str(uuid.uuid4())
+        order_by_level = {}
+        for level in range(4):
+            order_by_level[str(level)] = make_question_order(level)
+        st.session_state.question_order_by_level = order_by_level
+        st.session_state.last_batch_question_ids = []
         st.session_state.learning_started = True
         st.session_state.active_batch_key = None
         st.session_state.batch_started_at = None
@@ -1964,7 +2052,7 @@ with st.form(
         }
 
         selected_label = st.radio(
-            "答えを選んでください",
+            "",
 
             options=[option["label"] for option in question["options"]],
 
@@ -1982,6 +2070,8 @@ with st.form(
             ),
 
             index=None,
+            label_visibility="collapsed",
+            disabled=st.session_state.batch_submitted or st.session_state.session_ended_at is not None,
         )
 
         selected_answers[
@@ -2000,8 +2090,9 @@ with st.form(
 
     submit_batch = (
         st.form_submit_button(
-            "5問をまとめて採点する 📝",
+            "採点する",
             type="primary",
+            disabled=st.session_state.batch_submitted or st.session_state.session_ended_at is not None,
         )
     )
 
@@ -2015,8 +2106,9 @@ if submit_batch:
     batch_results = evaluate_batch(current_questions, selected_answers)
     st.session_state.batch_results = batch_results
     st.session_state.batch_submitted = True
+    st.session_state.last_batch_question_ids = [item["question"]["id"] for item in batch_results]
 
-    submitted_at = datetime.now().astimezone()
+    submitted_at = now_japan()
     try:
         batch_started_at = datetime.fromisoformat(st.session_state.batch_started_at)
         batch_elapsed_seconds = max(0.0, (submitted_at - batch_started_at).total_seconds())
@@ -2218,11 +2310,11 @@ if (
 
 
     # =====================================================
-    # 今回の誤答内訳
+    # 今回まちがえたこと
     # =====================================================
 
     st.markdown(
-        "### 🔎 今回の誤答内訳"
+        "### 🔎 今回まちがえたこと"
     )
 
     batch_mistakes = (
@@ -2246,7 +2338,7 @@ if (
             "other": "その他",
             "invalid_answer": "無効な回答",
             "unanswered": "未回答",
-            "action_only": "「～こと」が付かない形を選択",
+            "action_only": "「～こと」が付かない形を選んだ",
             "gerund": "動名詞の形を選択",
         }
 
@@ -2292,17 +2384,27 @@ if (
             st.success("レベル3で満点を達成しました。動名詞を使う問題に、最後まで取り組めました。")
     else:
         st.warning(f"{current_questions[0]['level_name']}は満点ではありません。次のレベルへは進みません。")
-        next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
-        if next_offset < len(current_level_questions):
-            if st.button("同じレベルの次セットへ ➡️", type="primary"):
+        if st.button("もう一度頑張ってみる", type="primary"):
+            next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
+            if next_offset < len(current_level_questions):
                 st.session_state.level_batch_number += 1
-                st.session_state.batch_number += 1
-                st.session_state.batch_results = None
-                st.session_state.batch_submitted = False
-                st.session_state.scroll_to_top = True
-                st.rerun()
-        else:
-            st.info("この仮バージョンでは、未達時の類題自動生成はまだ実装していません。")
+            else:
+                # 全問題を一巡した場合は順番を組み替え、直前と同じ5問セットを避ける。
+                previous_ids = set(st.session_state.get("last_batch_question_ids", []))
+                ids = make_question_order(current_level)
+                for _ in range(30):
+                    if set(ids[:QUESTIONS_PER_BATCH]) != previous_ids:
+                        break
+                    ids = make_question_order(current_level)
+                st.session_state.question_order_by_level[str(current_level)] = ids
+                st.session_state.level_batch_number = 0
+            st.session_state.batch_number += 1
+            st.session_state.batch_results = None
+            st.session_state.batch_submitted = False
+            st.session_state.active_batch_key = None
+            st.session_state.batch_started_at = None
+            st.session_state.scroll_to_top = True
+            st.rerun()
 
 
 # =========================================================
@@ -2555,22 +2657,44 @@ if st.session_state.history:
         expanded=False,
     ):
 
-        current_session_records = get_sorted_history()
+        active_session_id = st.session_state.get("learning_session_id")
+        current_session_records = [
+            record for record in get_sorted_history()
+            if record.get("learning_session_id") == active_session_id
+        ] if active_session_id else get_sorted_history()
 
         st.caption(
-            "現在のStreamlitセッション内で記録された全問題をまとめます。"
-            "5問ごとのセットではなく、10問なら10問分を一括で取得できます。"
-            "下のコード欄のコピー機能で、このチャットへ貼り付けてください。"
+            "今回の学習を始めてから記録された問題をまとめます。"
+            "再挑戦の結果も、回答した順に記録されます。"
+            "下の内容をコピーして、このチャットに貼り付けてください。"
         )
 
         session_copy_text = create_session_copy_text(
-            current_session_records
+            current_session_records,
+            session_started_at=st.session_state.get("session_started_at"),
+            session_ended_at=st.session_state.get("session_ended_at"),
         )
 
         st.code(
             session_copy_text,
             language="text",
         )
+
+        if st.session_state.get("session_ended_at"):
+            st.success(f"学習終了日時：{st.session_state.session_ended_at}")
+            if st.button("新しい学習を始める"):
+                st.session_state.learning_started = False
+                st.session_state.session_started_at = None
+                st.session_state.session_ended_at = None
+                st.session_state.learning_session_id = None
+                st.session_state.batch_results = None
+                st.session_state.batch_submitted = False
+                st.session_state.active_batch_key = None
+                st.session_state.batch_started_at = None
+                st.rerun()
+        elif st.button("学習を終了する"):
+            st.session_state.session_ended_at = now_japan().isoformat(timespec="seconds")
+            st.rerun()
 
 
 # =========================================================
