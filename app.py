@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta20"
+APP_VERSION = "1.6.0-beta21"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2465,7 +2465,7 @@ if (
           <button id="save-copy-{key_suffix}" style="
             width:100%; min-height:40px; padding:0.35rem 0.75rem;
             border:1px solid rgba(128,128,128,.55); border-radius:8px;
-            background:transparent; color:inherit; font-size:14px;
+            background:#20232b; color:#ffffff; font-size:14px;
             font-weight:600; cursor:pointer;">
             ほぞんする
           </button>
@@ -2493,23 +2493,9 @@ if (
                 area.remove();
                 if (!ok) throw new Error("clipboard copy failed");
               }}
-              status.textContent = "学習ログをコピーしました。戻ります…";
+              status.textContent = "学習ログをクリップボードに保存しました。画面はそのままです。";
               status.style.color = "#16a34a";
-              // Streamlit側の「レベルを選ぶ」を押して、セッション状態をリセットする。
-              setTimeout(() => {{
-                try {{
-                  const buttons = Array.from(window.parent.document.querySelectorAll("button"));
-                  const target = buttons.find(b => b.innerText.trim() === "レベルを選ぶ");
-                  if (target) target.click();
-                  else {{
-                    status.textContent = "コピー済みです。画面下の「レベルを選ぶ」を押してください。";
-                    button.disabled = false;
-                  }}
-                }} catch (e) {{
-                  status.textContent = "コピー済みです。画面下の「レベルを選ぶ」を押してください。";
-                  button.disabled = false;
-                }}
-              }}, 250);
+              button.disabled = false;
             }} catch (e) {{
               status.textContent = "コピーできませんでした。ブラウザの権限を確認して再試行してください。";
               status.style.color = "#dc2626";
@@ -2542,7 +2528,7 @@ if (
         st.warning(f"{current_questions[0]['level_name']}は満点ではありません。次のレベルへは進みません。")
         col_action, col_save = st.columns(2)
         with col_action:
-            if st.button("もう一度頑張ってみる", type="primary", use_container_width=True):
+            if st.button("もう一度がんばる", type="primary", use_container_width=True):
                 next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
                 if next_offset < len(current_level_questions):
                     st.session_state.level_batch_number += 1
@@ -2567,7 +2553,7 @@ if (
             render_clipboard_save_button("retry")
 
     st.markdown("")
-    if st.button("レベルを選ぶ"):
+    if st.button("レベルをえらぶ"):
         reset_to_level_selection()
         st.rerun()
 
