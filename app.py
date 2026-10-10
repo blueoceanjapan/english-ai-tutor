@@ -23,8 +23,8 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta28"
-STATE_VERSION = 13
+APP_VERSION = "1.6.0-beta29"
+STATE_VERSION = 14
 QUESTIONS_PER_BATCH = 5
 
 CHOICE_LABELS = ["ア", "イ", "ウ", "エ"]
@@ -1023,6 +1023,7 @@ def initialize_state():
     st.session_state.setdefault("session_started_at", None)
     st.session_state.setdefault("session_ended_at", None)
     st.session_state.setdefault("learning_session_id", None)
+    st.session_state.setdefault("returning_to_level_selection", False)
     st.session_state.setdefault("question_order_by_level", {})
     st.session_state.setdefault("last_batch_question_ids", [])
     st.session_state.setdefault("batch_started_at", None)
@@ -1970,14 +1971,25 @@ if not st.session_state.learning_started:
         st.session_state.batch_number = 0
         st.session_state.student_name = st.session_state.get("student_name_input", "")
         now = now_japan()
-        st.session_state.session_started_at = now.isoformat(timespec="milliseconds")
-        st.session_state.session_ended_at = None
-        st.session_state.learning_session_id = str(uuid.uuid4())
-        order_by_level = {}
-        for level in range(4):
-            order_by_level[str(level)] = make_question_order(level)
-        st.session_state.question_order_by_level = order_by_level
-        st.session_state.last_batch_question_ids = []
+        continuing_session = bool(
+            st.session_state.get("returning_to_level_selection")
+            and st.session_state.get("learning_session_id")
+            and st.session_state.get("session_started_at")
+        )
+        if not continuing_session:
+            st.session_state.session_started_at = now.isoformat(timespec="milliseconds")
+            st.session_state.session_ended_at = None
+            st.session_state.learning_session_id = str(uuid.uuid4())
+            order_by_level = {}
+            for level in range(4):
+                order_by_level[str(level)] = make_question_order(level)
+            st.session_state.question_order_by_level = order_by_level
+            st.session_state.last_batch_question_ids = []
+        else:
+            # レベル選択から戻った場合は同じ学習セッションとして継続する。
+            # 既存の出題順・開始日時・セッションIDを維持する。
+            st.session_state.session_ended_at = None
+        st.session_state.returning_to_level_selection = False
         st.session_state.learning_started = True
         st.session_state.active_batch_key = None
         st.session_state.batch_started_at = None
@@ -2439,11 +2451,11 @@ if (
     today_last_submit = max(today_submit_candidates).isoformat(timespec="milliseconds") if today_submit_candidates else None
 
     def reset_to_level_selection():
+        # レベル選択へ戻っても学習セッション自体は継続する。
+        # セッションID・開始日時を維持することで、再開後の問題も同一セッションに記録する。
         st.session_state.show_log_save_dialog = False
         st.session_state.learning_started = False
-        st.session_state.session_started_at = None
-        st.session_state.session_ended_at = None
-        st.session_state.learning_session_id = None
+        st.session_state.returning_to_level_selection = True
         st.session_state.batch_results = None
         st.session_state.batch_submitted = False
         st.session_state.active_batch_key = None
