@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta19"
+APP_VERSION = "1.6.0-beta20"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2438,9 +2438,7 @@ if (
             pass
     today_last_submit = max(today_submit_candidates).isoformat(timespec="milliseconds") if today_submit_candidates else None
 
-    def return_to_level_selection_after_save():
-        # Streamlit の download_button の on_click callback で実行。
-        # ダウンロード開始と同じ操作で学習画面の状態をリセットする。
+    def reset_to_level_selection():
         st.session_state.show_log_save_dialog = False
         st.session_state.learning_started = False
         st.session_state.session_started_at = None
@@ -2451,27 +2449,77 @@ if (
         st.session_state.active_batch_key = None
         st.session_state.batch_started_at = None
 
-    def render_save_log_dialog():
-        report_text = create_session_copy_text(
-            today_records,
-            session_started_at=today_session_start,
-            session_ended_at=today_last_submit,
-        )
+    report_text = create_session_copy_text(
+        today_records,
+        session_started_at=today_session_start,
+        session_ended_at=today_last_submit,
+    )
+    report_js = json.dumps(report_text, ensure_ascii=False)
 
-        @st.dialog("学習履歴を保存", dismissible=False)
-        def save_log_dialog():
-            # ダイアログ内には保存ボタンのみ配置。
-            # 保存操作の callback で学習履歴を保存対象にし、レベル選択へ戻す。
-            st.download_button(
-                label="ほぞんする",
-                data=report_text,
-                file_name=f"english_drill_learning_log_{datetime.now(ZoneInfo('Asia/Tokyo')).strftime('%Y%m%d_%H%M%S')}.txt",
-                mime="text/plain; charset=utf-8",
-                use_container_width=True,
-                key=f"download_today_report_{st.session_state.get('learning_session_id', 'no_session')}_{len(today_records)}",
-                on_click=return_to_level_selection_after_save,
-            )
-        save_log_dialog()
+    def render_clipboard_save_button(key_suffix):
+        # Streamlitの標準ボタンではクリックとブラウザのクリップボードAPIを
+        # 同じユーザー操作に結び付けられないため、iframe内のボタンで直接コピーする。
+        # コピー成功後、親画面の「レベルを選ぶ」を押して画面遷移する。
+        html = f"""
+        <div style="width:100%;font-family:inherit;">
+          <button id="save-copy-{key_suffix}" style="
+            width:100%; min-height:40px; padding:0.35rem 0.75rem;
+            border:1px solid rgba(128,128,128,.55); border-radius:8px;
+            background:transparent; color:inherit; font-size:14px;
+            font-weight:600; cursor:pointer;">
+            ほぞんする
+          </button>
+          <div id="save-status-{key_suffix}" style="font-size:12px; margin-top:4px; text-align:center;"></div>
+        </div>
+        <script>
+        (() => {{
+          const button = document.getElementById("save-copy-{key_suffix}");
+          const status = document.getElementById("save-status-{key_suffix}");
+          const reportText = {report_js};
+          button.addEventListener("click", async () => {{
+            button.disabled = true;
+            try {{
+              if (navigator.clipboard && navigator.clipboard.writeText) {{
+                await navigator.clipboard.writeText(reportText);
+              }} else {{
+                const area = document.createElement("textarea");
+                area.value = reportText;
+                area.style.position = "fixed";
+                area.style.opacity = "0";
+                document.body.appendChild(area);
+                area.focus();
+                area.select();
+                const ok = document.execCommand("copy");
+                area.remove();
+                if (!ok) throw new Error("clipboard copy failed");
+              }}
+              status.textContent = "学習ログをコピーしました。戻ります…";
+              status.style.color = "#16a34a";
+              // Streamlit側の「レベルを選ぶ」を押して、セッション状態をリセットする。
+              setTimeout(() => {{
+                try {{
+                  const buttons = Array.from(window.parent.document.querySelectorAll("button"));
+                  const target = buttons.find(b => b.innerText.trim() === "レベルを選ぶ");
+                  if (target) target.click();
+                  else {{
+                    status.textContent = "コピー済みです。画面下の「レベルを選ぶ」を押してください。";
+                    button.disabled = false;
+                  }}
+                }} catch (e) {{
+                  status.textContent = "コピー済みです。画面下の「レベルを選ぶ」を押してください。";
+                  button.disabled = false;
+                }}
+              }}, 250);
+            }} catch (e) {{
+              status.textContent = "コピーできませんでした。ブラウザの権限を確認して再試行してください。";
+              status.style.color = "#dc2626";
+              button.disabled = false;
+            }}
+          }});
+        }})();
+        </script>
+        """
+        st.components.v1.html(html, height=66, scrolling=False)
 
     if batch_is_perfect:
         st.success(f"{current_questions[0]['level_name']}のこのセットは満点です。")
@@ -2489,9 +2537,7 @@ if (
             else:
                 st.success("レベル3で満点を達成しました。動名詞を使う問題に、最後まで取り組めました。")
         with col_save:
-            if st.button("ほぞんする", use_container_width=True, key="open_save_dialog_perfect"):
-                st.session_state.show_log_save_dialog = True
-                st.rerun()
+            render_clipboard_save_button("perfect")
     else:
         st.warning(f"{current_questions[0]['level_name']}は満点ではありません。次のレベルへは進みません。")
         col_action, col_save = st.columns(2)
@@ -2518,17 +2564,12 @@ if (
                 st.session_state.scroll_to_top = True
                 st.rerun()
         with col_save:
-            if st.button("ほぞんする", use_container_width=True, key="open_save_dialog_retry"):
-                st.session_state.show_log_save_dialog = True
-                st.rerun()
+            render_clipboard_save_button("retry")
 
     st.markdown("")
     if st.button("レベルを選ぶ"):
-        st.session_state.show_log_save_dialog = True
+        reset_to_level_selection()
         st.rerun()
-
-    if st.session_state.get("show_log_save_dialog", False):
-        render_save_log_dialog()
 
 
 # =========================================================
