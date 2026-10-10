@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta16"
+APP_VERSION = "1.6.0-beta17"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2439,51 +2439,22 @@ if (
     today_last_submit = max(today_submit_candidates).isoformat(timespec="milliseconds") if today_submit_candidates else None
 
     def render_today_copy_button():
-        import streamlit.components.v1 as components
-
+        # iframe内のJavaScriptクリップボード操作は、端末・ブラウザ設定により
+        # 失敗してもStreamlit側で検知できないため、ネイティブのダウンロード機能に変更。
         report_text = create_session_copy_text(
             today_records,
             session_started_at=today_session_start,
             session_ended_at=today_last_submit,
         )
-        escaped_text = json.dumps(report_text, ensure_ascii=False)
-        button_html = f'''
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <button id="copyTodayReport" style="width:100%;min-height:38px;padding:0.25rem 0.75rem;border:1px solid rgba(128,128,128,.5);border-radius:.5rem;background:transparent;color:#ffffff;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
-            学習の結果をコピーする
-          </button>
-          <div style="font-size:12px;color:rgba(220,220,220,.8);line-height:1.4;">コピー後、画面下の「レベルを選ぶ」を押して戻ってください。</div>
-        </div>
-        <script>
-          const reportText = {escaped_text};
-          const copyButton = document.getElementById('copyTodayReport');
-          copyButton.addEventListener('click', async () => {{
-            try {{
-              await navigator.clipboard.writeText(reportText);
-              copyButton.textContent = 'コピーしました';
-
-            }} catch (error) {{
-              const textArea = document.createElement('textarea');
-              textArea.value = reportText;
-              textArea.style.position = 'fixed';
-              textArea.style.opacity = '0';
-              document.body.appendChild(textArea);
-              textArea.select();
-              const copied = document.execCommand('copy');
-              document.body.removeChild(textArea);
-              if (copied) {{
-                copyButton.textContent = 'コピーしました';
-
-              }} else {{
-                copyButton.textContent = 'コピーできませんでした。もう一度お試しください';
-              }}
-            }}
-          }});
-          // components.html は別 iframe のため、親画面の Streamlit ボタンを
-          // 安全・確実にクリックできない。コピー後は画面下の「レベルを選ぶ」を押す。
-        </script>
-        '''
-        components.html(button_html, height=48, scrolling=False)
+        st.download_button(
+            label="学習ログを保存する",
+            data=report_text,
+            file_name=f"english_drill_learning_log_{datetime.now(ZoneInfo('Asia/Tokyo')).strftime('%Y%m%d_%H%M%S')}.txt",
+            mime="text/plain; charset=utf-8",
+            use_container_width=True,
+            key=f"download_today_report_{st.session_state.get('learning_session_id', 'no_session')}_{len(today_records)}",
+            help="テキストファイルとして保存します。保存したファイルを開いて、学習ログを確認できます。",
+        )
 
     if batch_is_perfect:
         st.success(f"{current_questions[0]['level_name']}のこのセットは満点です。")
@@ -2534,7 +2505,7 @@ if (
     st.markdown("")
     if st.button("レベルを選ぶ"):
         # ポップアップは表示せず、学習者が直接レベル選択画面へ戻れるようにする。
-        # 学習ログは「学習の結果をコピーする」ボタンで、戻る前に必要に応じてコピーする。
+        # 学習ログは「学習ログを保存する」ボタンで、戻る前に必要に応じてコピーする。
         st.session_state.show_log_copy_before_level_select = False
         st.session_state.learning_started = False
         st.session_state.session_started_at = None
