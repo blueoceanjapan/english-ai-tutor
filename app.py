@@ -23,8 +23,8 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta10"
-STATE_VERSION = 12
+APP_VERSION = "1.6.0-beta12"
+STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
 CHOICE_LABELS = ["ア", "イ", "ウ", "エ"]
@@ -1327,8 +1327,10 @@ def create_history_record(
         "attempt_number": attempt_number,
         "is_first_attempt": attempt_number == 1,
 
+        # レポート上のセット番号は、現在のレベル内で表示したセット順にする。
+        # 全体進行用 batch_number は画面遷移の操作に左右されるため使用しない。
         "batch_number": (
-            st.session_state.batch_number
+            int(st.session_state.get("level_batch_number", 0))
             + 1
         ),
 
@@ -2522,15 +2524,31 @@ if (
 
     st.markdown("")
     if st.button("レベルを選ぶ"):
-        st.session_state.learning_started = False
-        st.session_state.session_started_at = None
-        st.session_state.session_ended_at = None
-        st.session_state.learning_session_id = None
-        st.session_state.batch_results = None
-        st.session_state.batch_submitted = False
-        st.session_state.active_batch_key = None
-        st.session_state.batch_started_at = None
+        # 学習者がレベル選択へ戻る前に、今日の学習ログを回収する案内を表示する。
+        st.session_state.show_log_copy_before_level_select = True
         st.rerun()
+
+    if st.session_state.get("show_log_copy_before_level_select", False):
+        @st.dialog("学習の結果をコピーしてください")
+        def log_copy_required_dialog():
+            st.warning(
+                "レベル選択画面に戻る前に、まず「学習の結果をコピーする」ボタンを押して、"
+                "今日の学習ログを保存してください。コピー後に下のボタンから戻れます。"
+            )
+            render_today_copy_button()
+            st.markdown("")
+            if st.button("コピー後にレベル選択へ戻る", type="primary", use_container_width=True):
+                st.session_state.show_log_copy_before_level_select = False
+                st.session_state.learning_started = False
+                st.session_state.session_started_at = None
+                st.session_state.session_ended_at = None
+                st.session_state.learning_session_id = None
+                st.session_state.batch_results = None
+                st.session_state.batch_submitted = False
+                st.session_state.active_batch_key = None
+                st.session_state.batch_started_at = None
+                st.rerun()
+        log_copy_required_dialog()
 
 
 # =========================================================
