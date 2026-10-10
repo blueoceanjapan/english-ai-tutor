@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta8"
+APP_VERSION = "1.6.0-beta10"
 STATE_VERSION = 12
 QUESTIONS_PER_BATCH = 5
 
@@ -1286,6 +1286,7 @@ def create_history_record(
     attempt_number=1,
     submitted_at=None,
     batch_elapsed_seconds=None,
+    batch_question_number=None,
 ):
 
     objective_id = question[
@@ -1335,8 +1336,12 @@ def create_history_record(
             "major_question"
         ],
 
+        # セット内の実際の表示順を記録する。
+        # question_number はストック番号なので、ここから小問番号を計算しない。
         "batch_question_number": (
-            ((question["question_number"] - 1) % QUESTIONS_PER_BATCH) + 1
+            batch_question_number
+            if batch_question_number is not None
+            else None
         ),
 
         "question_number": question[
@@ -2146,7 +2151,7 @@ if submit_batch:
     except (TypeError, ValueError):
         batch_elapsed_seconds = None
 
-    for item in batch_results:
+    for batch_question_number, item in enumerate(batch_results, start=1):
         question_id = item["question"]["id"]
         attempt_counts = st.session_state.get("attempt_counts", {})
         attempt_number = int(attempt_counts.get(question_id, 0)) + 1
@@ -2161,6 +2166,7 @@ if submit_batch:
                 attempt_number=attempt_number,
                 submitted_at=submitted_at,
                 batch_elapsed_seconds=batch_elapsed_seconds,
+                batch_question_number=batch_question_number,
             )
         )
 
