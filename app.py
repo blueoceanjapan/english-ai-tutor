@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta18"
+APP_VERSION = "1.6.0-beta19"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2458,7 +2458,7 @@ if (
             session_ended_at=today_last_submit,
         )
 
-        @st.dialog("学習履歴を保存")
+        @st.dialog("学習履歴を保存", dismissible=False)
         def save_log_dialog():
             # ダイアログ内には保存ボタンのみ配置。
             # 保存操作の callback で学習履歴を保存対象にし、レベル選択へ戻す。
@@ -2475,40 +2475,52 @@ if (
 
     if batch_is_perfect:
         st.success(f"{current_questions[0]['level_name']}のこのセットは満点です。")
-        if current_level < 3:
-            if st.button(f"レベル{current_level + 1}へ進む ➡️", type="primary", use_container_width=True):
-                st.session_state.current_level = current_level + 1
-                st.session_state.level_batch_number = 0
-                st.session_state.batch_results = None
-                st.session_state.batch_submitted = False
-                st.session_state.batch_number += 1
-                st.session_state.scroll_to_top = True
+        col_action, col_save = st.columns(2)
+        with col_action:
+            if current_level < 3:
+                if st.button(f"レベル{current_level + 1}へ進む ➡️", type="primary", use_container_width=True):
+                    st.session_state.current_level = current_level + 1
+                    st.session_state.level_batch_number = 0
+                    st.session_state.batch_results = None
+                    st.session_state.batch_submitted = False
+                    st.session_state.batch_number += 1
+                    st.session_state.scroll_to_top = True
+                    st.rerun()
+            else:
+                st.success("レベル3で満点を達成しました。動名詞を使う問題に、最後まで取り組めました。")
+        with col_save:
+            if st.button("ほぞんする", use_container_width=True, key="open_save_dialog_perfect"):
+                st.session_state.show_log_save_dialog = True
                 st.rerun()
-        else:
-            st.success("レベル3で満点を達成しました。動名詞を使う問題に、最後まで取り組めました。")
     else:
         st.warning(f"{current_questions[0]['level_name']}は満点ではありません。次のレベルへは進みません。")
-        if st.button("もう一度頑張ってみる", type="primary", use_container_width=True):
-            next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
-            if next_offset < len(current_level_questions):
-                st.session_state.level_batch_number += 1
-            else:
-                # 全問題を一巡した場合は順番を組み替え、直前と同じ5問セットを避ける。
-                previous_ids = set(st.session_state.get("last_batch_question_ids", []))
-                ids = make_question_order(current_level)
-                for _ in range(30):
-                    if set(ids[:QUESTIONS_PER_BATCH]) != previous_ids:
-                        break
+        col_action, col_save = st.columns(2)
+        with col_action:
+            if st.button("もう一度頑張ってみる", type="primary", use_container_width=True):
+                next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
+                if next_offset < len(current_level_questions):
+                    st.session_state.level_batch_number += 1
+                else:
+                    # 全問題を一巡した場合は順番を組み替え、直前と同じ5問セットを避ける。
+                    previous_ids = set(st.session_state.get("last_batch_question_ids", []))
                     ids = make_question_order(current_level)
-                st.session_state.question_order_by_level[str(current_level)] = ids
-                st.session_state.level_batch_number = 0
-            st.session_state.batch_number += 1
-            st.session_state.batch_results = None
-            st.session_state.batch_submitted = False
-            st.session_state.active_batch_key = None
-            st.session_state.batch_started_at = None
-            st.session_state.scroll_to_top = True
-            st.rerun()
+                    for _ in range(30):
+                        if set(ids[:QUESTIONS_PER_BATCH]) != previous_ids:
+                            break
+                        ids = make_question_order(current_level)
+                    st.session_state.question_order_by_level[str(current_level)] = ids
+                    st.session_state.level_batch_number = 0
+                st.session_state.batch_number += 1
+                st.session_state.batch_results = None
+                st.session_state.batch_submitted = False
+                st.session_state.active_batch_key = None
+                st.session_state.batch_started_at = None
+                st.session_state.scroll_to_top = True
+                st.rerun()
+        with col_save:
+            if st.button("ほぞんする", use_container_width=True, key="open_save_dialog_retry"):
+                st.session_state.show_log_save_dialog = True
+                st.rerun()
 
     st.markdown("")
     if st.button("レベルを選ぶ"):
