@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta13"
+APP_VERSION = "1.6.0-beta14"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -822,7 +822,7 @@ LEVEL0_QUESTION_BANK = [
             {"label": "ア", "value": "読む", "error_type": "action_only"},
             {"label": "イ", "value": "読むこと", "error_type": "none"},
         ], "answer": "イ",
-        "explanation": "「本を読むこと」が、好きなことを表しています。",
+        "explanation": "「読むこと」が、好きなことを表しています。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
     {
@@ -852,10 +852,10 @@ LEVEL0_QUESTION_BANK = [
         "question_type": "japanese_phrase_choice", "objective": "japanese_meaning",
         "difficulty": 0, "japanese": "絵を描くことはおもしろいです。", "english": "",
         "options": [
-            {"label": "ア", "value": "絵を描く", "error_type": "action_only"},
-            {"label": "イ", "value": "絵を描くこと", "error_type": "none"},
+            {"label": "ア", "value": "描く", "error_type": "action_only"},
+            {"label": "イ", "value": "描くこと", "error_type": "none"},
         ], "answer": "イ",
-        "explanation": "この文で「～すること」にあたる部分は「絵を描くこと」です。",
+        "explanation": "この文で「～すること」にあたる部分は「描くこと」です。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
     {
@@ -874,10 +874,10 @@ LEVEL0_QUESTION_BANK = [
         "question_type": "japanese_phrase_choice", "objective": "japanese_meaning",
         "difficulty": 0, "japanese": "映画を見ることが好きです。", "english": "",
         "options": [
-            {"label": "ア", "value": "映画を見ること", "error_type": "none"},
-            {"label": "イ", "value": "映画を見る", "error_type": "action_only"},
+            {"label": "ア", "value": "見ること", "error_type": "none"},
+            {"label": "イ", "value": "見る", "error_type": "action_only"},
         ], "answer": "ア",
-        "explanation": "この文で「～すること」にあたる部分は「映画を見ること」です。",
+        "explanation": "この文で「～すること」にあたる部分は「見ること」です。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
     {
@@ -885,10 +885,10 @@ LEVEL0_QUESTION_BANK = [
         "question_type": "japanese_phrase_choice", "objective": "japanese_meaning",
         "difficulty": 0, "japanese": "音楽を聴くことは楽しいです。", "english": "",
         "options": [
-            {"label": "ア", "value": "音楽を聴く", "error_type": "action_only"},
-            {"label": "イ", "value": "音楽を聴くこと", "error_type": "none"},
+            {"label": "ア", "value": "聴く", "error_type": "action_only"},
+            {"label": "イ", "value": "聴くこと", "error_type": "none"},
         ], "answer": "イ",
-        "explanation": "この文で「～すること」にあたる部分は「音楽を聴くこと」です。",
+        "explanation": "この文で「～すること」にあたる部分は「聴くこと」です。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
     {
@@ -896,10 +896,10 @@ LEVEL0_QUESTION_BANK = [
         "question_type": "japanese_phrase_choice", "objective": "japanese_meaning",
         "difficulty": 0, "japanese": "ギターを弾くことが好きです。", "english": "",
         "options": [
-            {"label": "ア", "value": "ギターを弾くこと", "error_type": "none"},
-            {"label": "イ", "value": "ギターを弾く", "error_type": "action_only"},
+            {"label": "ア", "value": "弾くこと", "error_type": "none"},
+            {"label": "イ", "value": "弾く", "error_type": "action_only"},
         ], "answer": "ア",
-        "explanation": "「ギターを弾くこと」が、好きなことを表しています。",
+        "explanation": "「弾くこと」が、好きなことを表しています。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
     {
@@ -929,10 +929,10 @@ LEVEL0_QUESTION_BANK = [
         "question_type": "japanese_phrase_choice", "objective": "japanese_meaning",
         "difficulty": 0, "japanese": "英語を勉強することは大切です。", "english": "",
         "options": [
-            {"label": "ア", "value": "英語を勉強すること", "error_type": "none"},
-            {"label": "イ", "value": "英語を勉強する", "error_type": "action_only"},
+            {"label": "ア", "value": "勉強すること", "error_type": "none"},
+            {"label": "イ", "value": "勉強する", "error_type": "action_only"},
         ], "answer": "ア",
-        "explanation": "この文で「～すること」にあたる部分は「英語を勉強すること」です。",
+        "explanation": "この文で「～すること」にあたる部分は「勉強すること」です。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
     {
@@ -940,10 +940,10 @@ LEVEL0_QUESTION_BANK = [
         "question_type": "japanese_phrase_choice", "objective": "japanese_meaning",
         "difficulty": 0, "japanese": "友だちと話すことが好きです。", "english": "",
         "options": [
-            {"label": "ア", "value": "友だちと話す", "error_type": "action_only"},
-            {"label": "イ", "value": "友だちと話すこと", "error_type": "none"},
+            {"label": "ア", "value": "話す", "error_type": "action_only"},
+            {"label": "イ", "value": "話すこと", "error_type": "none"},
         ], "answer": "イ",
-        "explanation": "この文で「～すること」にあたる部分は「友だちと話すこと」です。",
+        "explanation": "この文で「～すること」にあたる部分は「話すこと」です。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
     {
@@ -951,10 +951,10 @@ LEVEL0_QUESTION_BANK = [
         "question_type": "japanese_phrase_choice", "objective": "japanese_meaning",
         "difficulty": 0, "japanese": "音楽を聴くことが好きです。", "english": "",
         "options": [
-            {"label": "ア", "value": "音楽を聴くこと", "error_type": "none"},
-            {"label": "イ", "value": "音楽を聴く", "error_type": "action_only"},
+            {"label": "ア", "value": "聴くこと", "error_type": "none"},
+            {"label": "イ", "value": "聴く", "error_type": "action_only"},
         ], "answer": "ア",
-        "explanation": "「音楽を聴くこと」が、好きなことを表しています。",
+        "explanation": "「聴くこと」が、好きなことを表しています。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
     {
@@ -962,10 +962,10 @@ LEVEL0_QUESTION_BANK = [
         "question_type": "japanese_phrase_choice", "objective": "japanese_meaning",
         "difficulty": 0, "japanese": "写真を撮ることは楽しいです。", "english": "",
         "options": [
-            {"label": "ア", "value": "写真を撮る", "error_type": "action_only"},
-            {"label": "イ", "value": "写真を撮ること", "error_type": "none"},
+            {"label": "ア", "value": "撮る", "error_type": "action_only"},
+            {"label": "イ", "value": "撮ること", "error_type": "none"},
         ], "answer": "イ",
-        "explanation": "この文で「～すること」にあたる部分は「写真を撮ること」です。",
+        "explanation": "この文で「～すること」にあたる部分は「撮ること」です。",
         "level": 0, "level_name": "レベル0：動名詞ってなんだろう",
     },
 ]
