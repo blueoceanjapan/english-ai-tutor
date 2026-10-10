@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta15"
+APP_VERSION = "1.6.0-beta16"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2448,10 +2448,11 @@ if (
         )
         escaped_text = json.dumps(report_text, ensure_ascii=False)
         button_html = f'''
-        <div style="display:flex;align-items:center;height:42px;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
           <button id="copyTodayReport" style="width:100%;min-height:38px;padding:0.25rem 0.75rem;border:1px solid rgba(128,128,128,.5);border-radius:.5rem;background:transparent;color:#ffffff;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
             学習の結果をコピーする
           </button>
+          <div style="font-size:12px;color:rgba(220,220,220,.8);line-height:1.4;">コピー後、画面下の「レベルを選ぶ」を押して戻ってください。</div>
         </div>
         <script>
           const reportText = {escaped_text};
@@ -2459,8 +2460,8 @@ if (
           copyButton.addEventListener('click', async () => {{
             try {{
               await navigator.clipboard.writeText(reportText);
-              copyButton.textContent = 'コピーしました。レベル選択へ戻ります';
-              setTimeout(() => returnToLevelSelection(), 250);
+              copyButton.textContent = 'コピーしました';
+
             }} catch (error) {{
               const textArea = document.createElement('textarea');
               textArea.value = reportText;
@@ -2471,27 +2472,15 @@ if (
               const copied = document.execCommand('copy');
               document.body.removeChild(textArea);
               if (copied) {{
-                copyButton.textContent = 'コピーしました。レベル選択へ戻ります';
-                setTimeout(() => returnToLevelSelection(), 250);
+                copyButton.textContent = 'コピーしました';
+
               }} else {{
                 copyButton.textContent = 'コピーできませんでした。もう一度お試しください';
               }}
             }}
           }});
-          function returnToLevelSelection() {{
-            try {{
-              const parentDoc = window.parent.document;
-              const buttons = Array.from(parentDoc.querySelectorAll('button'));
-              const levelButton = buttons.find(button => button.innerText.trim() === 'レベルを選ぶ');
-              if (levelButton) {{
-                levelButton.click();
-              }} else {{
-                copyButton.textContent = 'コピーしました。下の「レベルを選ぶ」を押してください';
-              }}
-            }} catch (error) {{
-              copyButton.textContent = 'コピーしました。下の「レベルを選ぶ」を押してください';
-            }}
-          }}
+          // components.html は別 iframe のため、親画面の Streamlit ボタンを
+          // 安全・確実にクリックできない。コピー後は画面下の「レベルを選ぶ」を押す。
         </script>
         '''
         components.html(button_html, height=48, scrolling=False)
