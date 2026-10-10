@@ -2441,8 +2441,8 @@ if (
         escaped_text = json.dumps(report_text, ensure_ascii=False)
         button_html = f'''
         <div style="display:flex;align-items:center;height:42px;">
-          <button id="copyTodayReport" style="width:100%;min-height:38px;padding:0.25rem 0.75rem;border:1px solid rgba(128,128,128,.5);border-radius:.5rem;background:transparent;color:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
-            今日の学習結果をコピーする
+          <button id="copyTodayReport" style="width:100%;min-height:38px;padding:0.25rem 0.75rem;border:1px solid rgba(128,128,128,.5);border-radius:.5rem;background:transparent;color:#ffffff;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
+            学習の結果をコピーする
           </button>
         </div>
         <script>
@@ -2515,7 +2515,7 @@ if (
             render_today_copy_button()
 
     st.markdown("")
-    if st.button("新しい学習を始める"):
+    if st.button("レベルを選ぶ"):
         st.session_state.learning_started = False
         st.session_state.session_started_at = None
         st.session_state.session_ended_at = None
