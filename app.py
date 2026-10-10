@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta21"
+APP_VERSION = "1.6.0-beta22"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2465,8 +2465,8 @@ if (
           <button id="save-copy-{key_suffix}" style="
             width:100%; min-height:40px; padding:0.35rem 0.75rem;
             border:1px solid rgba(128,128,128,.55); border-radius:8px;
-            background:#20232b; color:#ffffff; font-size:14px;
-            font-weight:600; cursor:pointer;">
+            background:#1769d2; color:#ffffff; font-size:14px;
+            font-weight:700; cursor:pointer;">
             ほぞんする
           </button>
           <div id="save-status-{key_suffix}" style="font-size:12px; margin-top:4px; text-align:center;"></div>
@@ -2552,8 +2552,18 @@ if (
         with col_save:
             render_clipboard_save_button("retry")
 
+    st.markdown(
+        """<style>
+        div[data-testid="stButton"]:has(button[kind="primary"]) button {
+            background-color: #f2c94c !important;
+            border-color: #f2c94c !important;
+            color: #202020 !important;
+        }
+        </style>""",
+        unsafe_allow_html=True,
+    )
     st.markdown("")
-    if st.button("レベルをえらぶ"):
+    if st.button("レベルをえらぶ", type="primary"):
         reset_to_level_selection()
         st.rerun()
 
