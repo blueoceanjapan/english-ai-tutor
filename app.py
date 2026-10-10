@@ -23,8 +23,8 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta7"
-STATE_VERSION = 11
+APP_VERSION = "1.6.0-beta8"
+STATE_VERSION = 12
 QUESTIONS_PER_BATCH = 5
 
 CHOICE_LABELS = ["ア", "イ", "ウ", "エ"]
@@ -1620,7 +1620,10 @@ def create_session_copy_text(
 
     records = sorted(
         records,
-        key=history_sort_key,
+        key=lambda record: (
+            record.get("submitted_at") or record.get("timestamp", ""),
+            int(record.get("batch_question_number", record.get("question_number", 0)) or 0),
+        ),
     )
 
     total = len(records)
@@ -1695,21 +1698,16 @@ def create_session_copy_text(
     except (TypeError, ValueError):
         started_dt = None
     try:
-        ended_dt = datetime.fromisoformat(session_ended_at) if session_ended_at else None
-    except (TypeError, ValueError):
-        ended_dt = None
-    try:
         last_submit_dt = datetime.fromisoformat(last_timestamp) if last_timestamp else None
     except (TypeError, ValueError):
         last_submit_dt = None
 
     lines = [
-        "【中2英語 個別学習支援ドリル｜今回の学習結果】",
-        "※今回の学習開始後に記録された問題を対象としています。",
-        f"学習開始日時：{session_started_at or '記録なし'}",
+        "【中2英語 個別学習支援ドリル｜今日の学習結果】",
+        "※今日（日本時間）に採点された問題を対象としています。複数回の学習がある場合は、それらをまとめて記録します。",
+        f"今日の最初の学習開始日時：{session_started_at or '記録なし'}",
         f"最終採点日時：{last_timestamp or '記録なし'}",
-        f"学習終了日時：{session_ended_at or '未終了（「学習を終了する」を押すと記録されます）'}",
-        (f"学習開始から終了まで：{max(0, (ended_dt - started_dt).total_seconds()):.1f}秒" if ended_dt and started_dt else (f"学習開始から最終採点まで：{max(0, (last_submit_dt - started_dt).total_seconds()):.1f}秒" if last_submit_dt and started_dt else "所要時間：算出できません")),
+        (f"最初の学習開始から最終採点まで：{max(0, (last_submit_dt - started_dt).total_seconds()):.1f}秒（途中の休憩・中断時間を含む場合があります）" if last_submit_dt and started_dt else "所要時間：算出できません"),
         f"問題数：{total}問",
         f"正解：{correct}問",
         f"正答率：{accuracy:.1f}%",
@@ -1718,13 +1716,22 @@ def create_session_copy_text(
     # セット単位の時刻を出力。開始は問題表示、終了は採点ボタン押下後の記録時点。
     batch_groups = {}
     for record in records:
-        batch_number = record.get("batch_number", "")
-        if batch_number not in batch_groups:
-            batch_groups[batch_number] = record
+        group_key = (
+            record.get("learning_session_id", ""),
+            record.get("level", ""),
+            record.get("batch_number", ""),
+            record.get("batch_started_at", ""),
+        )
+        if group_key not in batch_groups:
+            batch_groups[group_key] = record
 
     lines.extend(["", "【セット別の開始・終了時刻】"])
     lines.append("※開始は5問セットが画面に表示された時点、終了は「採点する」を押して採点処理が記録された時点です。実際に考え始めた瞬間や、画面を見ていない時間までは判定できません。")
-    for batch_number, record in sorted(batch_groups.items(), key=lambda item: str(item[0])):
+    for group_key, record in sorted(batch_groups.items(), key=lambda item: (str(item[1].get("submitted_at", "")), str(item[0]))):
+        batch_number = record.get("batch_number", "")
+        level_name = record.get("level_name", "")
+        if level_name:
+            lines.append(f"対象：{level_name}／セット{batch_number}")
         batch_start = record.get("batch_started_at") or "記録なし"
         batch_end = record.get("batch_ended_at") or record.get("submitted_at") or record.get("timestamp") or "記録なし"
         try:
@@ -1734,7 +1741,6 @@ def create_session_copy_text(
         except (TypeError, ValueError):
             duration_text = "算出できません"
         lines.extend([
-            f"セット{batch_number}",
             f"  開始日時：{batch_start}",
             f"  終了日時：{batch_end}",
             f"  セット所要時間：{duration_text}",
@@ -1936,9 +1942,6 @@ st.title(
     "📚 中2英語 個別学習支援ドリル"
 )
 
-if st.session_state.get("session_ended_at"):
-    st.info("この学習は終了しました。学習結果を確認・保存できます。新しい学習を始める場合は、学習データ欄の「新しい学習を始める」を押してください。")
-
 if not st.session_state.learning_started:
     st.markdown("## 学習を始めよう")
     st.write("取り組むレベルを選んでください。")
@@ -2097,7 +2100,7 @@ with st.form(
 
             index=None,
             label_visibility="collapsed",
-            disabled=st.session_state.batch_submitted or st.session_state.session_ended_at is not None,
+            disabled=st.session_state.batch_submitted,
         )
 
         selected_answers[
@@ -2118,7 +2121,7 @@ with st.form(
         st.form_submit_button(
             "採点する",
             type="primary",
-            disabled=st.session_state.batch_submitted or st.session_state.session_ended_at is not None,
+            disabled=st.session_state.batch_submitted,
         )
     )
 
@@ -2135,6 +2138,8 @@ if submit_batch:
     st.session_state.last_batch_question_ids = [item["question"]["id"] for item in batch_results]
 
     submitted_at = now_japan()
+    # セット終了時刻と今回の最終採点時刻は、「採点する」を押した時点で記録する。
+    st.session_state.session_ended_at = submitted_at.isoformat(timespec="milliseconds")
     try:
         batch_started_at = datetime.fromisoformat(st.session_state.batch_started_at)
         batch_elapsed_seconds = max(0.0, (submitted_at - batch_started_at).total_seconds())
@@ -2385,7 +2390,7 @@ if (
 
 
     # =====================================================
-    # レベル進行
+    # レベル進行・今日の学習結果コピー
     # =====================================================
 
     batch_is_perfect = (
@@ -2395,42 +2400,131 @@ if (
 
     st.markdown("---")
 
+    # 今日（日本時間）に採点された学習履歴を、レベルやセッションをまたいでまとめる。
+    today = now_japan().date()
+    today_records = []
+    for record in st.session_state.history:
+        timestamp_value = record.get("submitted_at") or record.get("timestamp", "")
+        try:
+            record_date = datetime.fromisoformat(timestamp_value).astimezone(JAPAN_TZ).date()
+        except (TypeError, ValueError):
+            continue
+        if record_date == today:
+            today_records.append(record)
+
+    today_start_candidates = []
+    for record in today_records:
+        value = record.get("session_started_at")
+        if value:
+            try:
+                today_start_candidates.append(datetime.fromisoformat(value))
+            except (TypeError, ValueError):
+                pass
+    today_session_start = min(today_start_candidates).isoformat(timespec="milliseconds") if today_start_candidates else None
+    today_submit_candidates = []
+    for record in today_records:
+        value = record.get("submitted_at") or record.get("timestamp", "")
+        try:
+            today_submit_candidates.append(datetime.fromisoformat(value))
+        except (TypeError, ValueError):
+            pass
+    today_last_submit = max(today_submit_candidates).isoformat(timespec="milliseconds") if today_submit_candidates else None
+
+    def render_today_copy_button():
+        import streamlit.components.v1 as components
+
+        report_text = create_session_copy_text(
+            today_records,
+            session_started_at=today_session_start,
+            session_ended_at=today_last_submit,
+        )
+        escaped_text = json.dumps(report_text, ensure_ascii=False)
+        button_html = f'''
+        <div style="display:flex;align-items:center;height:42px;">
+          <button id="copyTodayReport" style="width:100%;min-height:38px;padding:0.25rem 0.75rem;border:1px solid rgba(128,128,128,.5);border-radius:.5rem;background:transparent;color:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;">
+            今日の学習結果をコピーする
+          </button>
+        </div>
+        <script>
+          const reportText = {escaped_text};
+          const copyButton = document.getElementById('copyTodayReport');
+          copyButton.addEventListener('click', async () => {{
+            try {{
+              await navigator.clipboard.writeText(reportText);
+              copyButton.textContent = 'コピーしました';
+            }} catch (error) {{
+              const textArea = document.createElement('textarea');
+              textArea.value = reportText;
+              textArea.style.position = 'fixed';
+              textArea.style.opacity = '0';
+              document.body.appendChild(textArea);
+              textArea.select();
+              const copied = document.execCommand('copy');
+              document.body.removeChild(textArea);
+              copyButton.textContent = copied ? 'コピーしました' : 'コピーできませんでした';
+            }}
+          }});
+        </script>
+        '''
+        components.html(button_html, height=48, scrolling=False)
+
     if batch_is_perfect:
         st.success(f"{current_questions[0]['level_name']}のこのセットは満点です。")
         if current_level < 3:
-            if st.button(f"レベル{current_level + 1}へ進む ➡️", type="primary"):
-                st.session_state.current_level = current_level + 1
-                st.session_state.level_batch_number = 0
-                st.session_state.batch_results = None
-                st.session_state.batch_submitted = False
-                st.session_state.batch_number += 1
-                st.session_state.scroll_to_top = True
-                st.rerun()
+            progress_col, copy_col = st.columns([1, 1])
+            with progress_col:
+                if st.button(f"レベル{current_level + 1}へ進む ➡️", type="primary", use_container_width=True):
+                    st.session_state.current_level = current_level + 1
+                    st.session_state.level_batch_number = 0
+                    st.session_state.batch_results = None
+                    st.session_state.batch_submitted = False
+                    st.session_state.batch_number += 1
+                    st.session_state.scroll_to_top = True
+                    st.rerun()
+            with copy_col:
+                render_today_copy_button()
         else:
             st.success("レベル3で満点を達成しました。動名詞を使う問題に、最後まで取り組めました。")
+            render_today_copy_button()
     else:
         st.warning(f"{current_questions[0]['level_name']}は満点ではありません。次のレベルへは進みません。")
-        if st.button("もう一度頑張ってみる", type="primary"):
-            next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
-            if next_offset < len(current_level_questions):
-                st.session_state.level_batch_number += 1
-            else:
-                # 全問題を一巡した場合は順番を組み替え、直前と同じ5問セットを避ける。
-                previous_ids = set(st.session_state.get("last_batch_question_ids", []))
-                ids = make_question_order(current_level)
-                for _ in range(30):
-                    if set(ids[:QUESTIONS_PER_BATCH]) != previous_ids:
-                        break
+        retry_col, copy_col = st.columns([1, 1])
+        with retry_col:
+            if st.button("もう一度頑張ってみる", type="primary", use_container_width=True):
+                next_offset = (st.session_state.get("level_batch_number", 0) + 1) * QUESTIONS_PER_BATCH
+                if next_offset < len(current_level_questions):
+                    st.session_state.level_batch_number += 1
+                else:
+                    # 全問題を一巡した場合は順番を組み替え、直前と同じ5問セットを避ける。
+                    previous_ids = set(st.session_state.get("last_batch_question_ids", []))
                     ids = make_question_order(current_level)
-                st.session_state.question_order_by_level[str(current_level)] = ids
-                st.session_state.level_batch_number = 0
-            st.session_state.batch_number += 1
-            st.session_state.batch_results = None
-            st.session_state.batch_submitted = False
-            st.session_state.active_batch_key = None
-            st.session_state.batch_started_at = None
-            st.session_state.scroll_to_top = True
-            st.rerun()
+                    for _ in range(30):
+                        if set(ids[:QUESTIONS_PER_BATCH]) != previous_ids:
+                            break
+                        ids = make_question_order(current_level)
+                    st.session_state.question_order_by_level[str(current_level)] = ids
+                    st.session_state.level_batch_number = 0
+                st.session_state.batch_number += 1
+                st.session_state.batch_results = None
+                st.session_state.batch_submitted = False
+                st.session_state.active_batch_key = None
+                st.session_state.batch_started_at = None
+                st.session_state.scroll_to_top = True
+                st.rerun()
+        with copy_col:
+            render_today_copy_button()
+
+    st.markdown("")
+    if st.button("新しい学習を始める"):
+        st.session_state.learning_started = False
+        st.session_state.session_started_at = None
+        st.session_state.session_ended_at = None
+        st.session_state.learning_session_id = None
+        st.session_state.batch_results = None
+        st.session_state.batch_submitted = False
+        st.session_state.active_batch_key = None
+        st.session_state.batch_started_at = None
+        st.rerun()
 
 
 # =========================================================
@@ -2672,55 +2766,8 @@ st.caption(
 )
 
 
-# =========================================================
-# 開発者向け：直近セッション結果のコピー
-# =========================================================
-
-if st.session_state.history:
-
-    with st.expander(
-        "🧪 開発者向け：学習セッション結果をコピー",
-        expanded=False,
-    ):
-
-        active_session_id = st.session_state.get("learning_session_id")
-        current_session_records = [
-            record for record in get_sorted_history()
-            if record.get("learning_session_id") == active_session_id
-        ] if active_session_id else get_sorted_history()
-
-        st.caption(
-            "今回の学習を始めてから記録された問題をまとめます。"
-            "再挑戦の結果も、回答した順に記録されます。"
-            "下の内容をコピーして、このチャットに貼り付けてください。"
-        )
-
-        session_copy_text = create_session_copy_text(
-            current_session_records,
-            session_started_at=st.session_state.get("session_started_at"),
-            session_ended_at=st.session_state.get("session_ended_at"),
-        )
-
-        st.code(
-            session_copy_text,
-            language="text",
-        )
-
-        if st.session_state.get("session_ended_at"):
-            st.success(f"学習終了日時：{st.session_state.session_ended_at}")
-            if st.button("新しい学習を始める"):
-                st.session_state.learning_started = False
-                st.session_state.session_started_at = None
-                st.session_state.session_ended_at = None
-                st.session_state.learning_session_id = None
-                st.session_state.batch_results = None
-                st.session_state.batch_submitted = False
-                st.session_state.active_batch_key = None
-                st.session_state.batch_started_at = None
-                st.rerun()
-        elif st.button("学習を終了する"):
-            st.session_state.session_ended_at = now_japan().isoformat(timespec="milliseconds")
-            st.rerun()
+# 今日の学習結果コピーは、採点後の学習者向けボタンから実行します。
+# 開発者向けのコピー欄と手動終了ボタンは学習画面から取り除きました。
 
 
 # =========================================================
