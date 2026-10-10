@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta14"
+APP_VERSION = "1.6.0-beta15"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2459,7 +2459,8 @@ if (
           copyButton.addEventListener('click', async () => {{
             try {{
               await navigator.clipboard.writeText(reportText);
-              copyButton.textContent = 'コピーしました';
+              copyButton.textContent = 'コピーしました。レベル選択へ戻ります';
+              setTimeout(() => returnToLevelSelection(), 250);
             }} catch (error) {{
               const textArea = document.createElement('textarea');
               textArea.value = reportText;
@@ -2469,9 +2470,28 @@ if (
               textArea.select();
               const copied = document.execCommand('copy');
               document.body.removeChild(textArea);
-              copyButton.textContent = copied ? 'コピーしました' : 'コピーできませんでした';
+              if (copied) {{
+                copyButton.textContent = 'コピーしました。レベル選択へ戻ります';
+                setTimeout(() => returnToLevelSelection(), 250);
+              }} else {{
+                copyButton.textContent = 'コピーできませんでした。もう一度お試しください';
+              }}
             }}
           }});
+          function returnToLevelSelection() {{
+            try {{
+              const parentDoc = window.parent.document;
+              const buttons = Array.from(parentDoc.querySelectorAll('button'));
+              const levelButton = buttons.find(button => button.innerText.trim() === 'レベルを選ぶ');
+              if (levelButton) {{
+                levelButton.click();
+              }} else {{
+                copyButton.textContent = 'コピーしました。下の「レベルを選ぶ」を押してください';
+              }}
+            }} catch (error) {{
+              copyButton.textContent = 'コピーしました。下の「レベルを選ぶ」を押してください';
+            }}
+          }}
         </script>
         '''
         components.html(button_html, height=48, scrolling=False)
