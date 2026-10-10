@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta6"
+APP_VERSION = "1.6.0-beta7"
 STATE_VERSION = 11
 QUESTIONS_PER_BATCH = 5
 
@@ -1317,10 +1317,11 @@ def create_history_record(
 
     return {
         "learning_session_id": st.session_state.get("learning_session_id"),
-        "timestamp": submitted_at.isoformat(timespec="seconds"),
+        "timestamp": submitted_at.isoformat(timespec="milliseconds"),
         "session_started_at": st.session_state.get("session_started_at"),
         "batch_started_at": st.session_state.get("batch_started_at"),
-        "submitted_at": submitted_at.isoformat(timespec="seconds"),
+        "batch_ended_at": submitted_at.isoformat(timespec="milliseconds"),
+        "submitted_at": submitted_at.isoformat(timespec="milliseconds"),
         "seconds_from_batch_display_to_submit": batch_elapsed_seconds,
         "attempt_number": attempt_number,
         "is_first_attempt": attempt_number == 1,
@@ -1712,9 +1713,34 @@ def create_session_copy_text(
         f"問題数：{total}問",
         f"正解：{correct}問",
         f"正答率：{accuracy:.1f}%",
-        "",
-        "【学習項目別の結果】",
     ]
+
+    # セット単位の時刻を出力。開始は問題表示、終了は採点ボタン押下後の記録時点。
+    batch_groups = {}
+    for record in records:
+        batch_number = record.get("batch_number", "")
+        if batch_number not in batch_groups:
+            batch_groups[batch_number] = record
+
+    lines.extend(["", "【セット別の開始・終了時刻】"])
+    lines.append("※開始は5問セットが画面に表示された時点、終了は「採点する」を押して採点処理が記録された時点です。実際に考え始めた瞬間や、画面を見ていない時間までは判定できません。")
+    for batch_number, record in sorted(batch_groups.items(), key=lambda item: str(item[0])):
+        batch_start = record.get("batch_started_at") or "記録なし"
+        batch_end = record.get("batch_ended_at") or record.get("submitted_at") or record.get("timestamp") or "記録なし"
+        try:
+            start_dt = datetime.fromisoformat(batch_start)
+            end_dt = datetime.fromisoformat(batch_end)
+            duration_text = f"{max(0.0, (end_dt - start_dt).total_seconds()):.1f}秒"
+        except (TypeError, ValueError):
+            duration_text = "算出できません"
+        lines.extend([
+            f"セット{batch_number}",
+            f"  開始日時：{batch_start}",
+            f"  終了日時：{batch_end}",
+            f"  セット所要時間：{duration_text}",
+        ])
+
+    lines.extend(["", "【学習項目別の結果】"])
 
     if not objective_counts:
         lines.append("データなし")
@@ -1892,9 +1918,9 @@ active_batch_key = f"{current_level}:{st.session_state.get('level_batch_number',
 if st.session_state.get("active_batch_key") != active_batch_key:
     now = now_japan()
     st.session_state.active_batch_key = active_batch_key
-    st.session_state.batch_started_at = now.isoformat(timespec="seconds")
+    st.session_state.batch_started_at = now.isoformat(timespec="milliseconds")
 if st.session_state.get("session_started_at") is None and st.session_state.get("learning_started"):
-    st.session_state.session_started_at = now_japan().isoformat(timespec="seconds")
+    st.session_state.session_started_at = now_japan().isoformat(timespec="milliseconds")
 
 # レベル外の問題が混入していないかを実行時にも確認します。
 if current_questions and any(q.get("level") != current_level for q in current_questions):
@@ -1934,7 +1960,7 @@ if not st.session_state.learning_started:
         st.session_state.batch_number = 0
         st.session_state.student_name = st.session_state.get("student_name_input", "")
         now = now_japan()
-        st.session_state.session_started_at = now.isoformat(timespec="seconds")
+        st.session_state.session_started_at = now.isoformat(timespec="milliseconds")
         st.session_state.session_ended_at = None
         st.session_state.learning_session_id = str(uuid.uuid4())
         order_by_level = {}
@@ -2693,7 +2719,7 @@ if st.session_state.history:
                 st.session_state.batch_started_at = None
                 st.rerun()
         elif st.button("学習を終了する"):
-            st.session_state.session_ended_at = now_japan().isoformat(timespec="seconds")
+            st.session_state.session_ended_at = now_japan().isoformat(timespec="milliseconds")
             st.rerun()
 
 
