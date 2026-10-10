@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta23"
+APP_VERSION = "1.6.0-beta24"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2552,19 +2552,75 @@ if (
         with col_save:
             render_clipboard_save_button("retry")
 
+    # レベル選択へ戻る操作では、まず同じ学習ログをクリップボードにコピーする。
+    # コピーが成功した場合のみ、隠したStreamlitボタンを押して画面遷移する。
+    level_return_html = f"""
+    <div style="width:100%;font-family:inherit;">
+      <button id="copy-and-return-level" style="
+        width:100%; min-height:40px; padding:0.35rem 0.75rem;
+        border:1px solid #d9ae2c; border-radius:8px;
+        background:#f2c94c; color:#202020; font-size:14px;
+        font-weight:600; cursor:pointer;">
+        レベルをえらぶ
+      </button>
+      <div id="level-return-status" style="font-size:12px;margin-top:4px;text-align:center;"></div>
+    </div>
+    <script>
+    (() => {{
+      const button = document.getElementById("copy-and-return-level");
+      const status = document.getElementById("level-return-status");
+      const reportText = {report_js};
+      button.addEventListener("click", async () => {{
+        button.disabled = true;
+        try {{
+          if (navigator.clipboard && navigator.clipboard.writeText) {{
+            await navigator.clipboard.writeText(reportText);
+          }} else {{
+            const area = document.createElement("textarea");
+            area.value = reportText;
+            area.style.position = "fixed";
+            area.style.opacity = "0";
+            document.body.appendChild(area);
+            area.focus();
+            area.select();
+            const ok = document.execCommand("copy");
+            area.remove();
+            if (!ok) throw new Error("clipboard copy failed");
+          }}
+          status.textContent = "学習ログを保存しました。レベル選択へ戻ります。";
+          status.style.color = "#16a34a";
+          setTimeout(() => {{
+            try {{
+              const buttons = Array.from(window.parent.document.querySelectorAll("button"));
+              const target = buttons.find(b => b.innerText.trim() === "レベル選択へ戻る");
+              if (target) target.click();
+              else {{
+                status.textContent = "コピー済みです。画面を戻せませんでした。";
+                button.disabled = false;
+              }}
+            }} catch (e) {{
+              status.textContent = "コピー済みです。画面を戻せませんでした。";
+              button.disabled = false;
+            }}
+          }}, 150);
+        }} catch (e) {{
+          status.textContent = "コピーできませんでした。もう一度お試しください。";
+          status.style.color = "#dc2626";
+          button.disabled = false;
+        }}
+      }});
+    }})();
+    </script>
+    """
+    st.components.v1.html(level_return_html, height=66, scrolling=False)
+    # iframe内ボタンから呼び出すStreamlit側の遷移ボタンは画面上では隠す。
     st.markdown(
         """<style>
-        /* 「レベルをえらぶ」だけを黄色にする。再挑戦ボタンの赤色には影響させない。 */
-        div[data-testid="stButton"]:has(button[kind="primary"][aria-label="レベルをえらぶ"]) button {
-            background-color: #f2c94c !important;
-            border-color: #f2c94c !important;
-            color: #202020 !important;
-        }
+        div[data-testid="stButton"]:last-of-type { display: none !important; }
         </style>""",
         unsafe_allow_html=True,
     )
-    st.markdown("")
-    if st.button("レベルをえらぶ", type="primary"):
+    if st.button("レベル選択へ戻る", key="level_select_return_native"):
         reset_to_level_selection()
         st.rerun()
 
