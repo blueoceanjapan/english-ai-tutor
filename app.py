@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta22"
+APP_VERSION = "1.6.0-beta23"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2554,7 +2554,8 @@ if (
 
     st.markdown(
         """<style>
-        div[data-testid="stButton"]:has(button[kind="primary"]) button {
+        /* 「レベルをえらぶ」だけを黄色にする。再挑戦ボタンの赤色には影響させない。 */
+        div[data-testid="stButton"]:has(button[kind="primary"][aria-label="レベルをえらぶ"]) button {
             background-color: #f2c94c !important;
             border-color: #f2c94c !important;
             color: #202020 !important;
