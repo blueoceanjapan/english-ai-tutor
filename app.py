@@ -23,7 +23,7 @@ st.set_page_config(
     layout="centered",
 )
 
-APP_VERSION = "1.6.0-beta25"
+APP_VERSION = "1.6.0-beta26"
 STATE_VERSION = 13
 QUESTIONS_PER_BATCH = 5
 
@@ -2614,18 +2614,8 @@ if (
     """
     st.components.v1.html(level_return_html, height=66, scrolling=False)
     # iframe内ボタンから呼び出すStreamlit側の遷移ボタンは画面上では隠す。
-    st.markdown(
-        """<style>
-        /* 内部処理用ボタンだけを非表示にし、学習者向けボタンは隠さない */
-        div[data-testid="stButton"]:has(button[kind="secondary"][aria-label="レベル選択へ戻る"]) {
-            display: none !important;
-        }
-        </style>""",
-        unsafe_allow_html=True,
-    )
-    if st.button("レベル選択へ戻る", key="level_select_return_native"):
-        reset_to_level_selection()
-        st.rerun()
+    # レベル選択への遷移は、黄色の「レベルをえらぶ」ボタンに一本化する。
+    # 追加の「レベル選択へ戻る」ボタンは表示しない。
 
 
 # =========================================================
